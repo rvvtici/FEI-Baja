@@ -64,7 +64,6 @@ export default function Home() {
             onError={(err) => setError(String(err))}
             constraints={{ facingMode: 'environment' }}
             components={{
-              audio: true,
               finder: true,
               torch: true,
             }}
