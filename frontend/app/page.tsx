@@ -2,9 +2,13 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import { GeistSans } from "geist/font/sans";
 import type { IDetectedBarcode } from '@yudiel/react-qr-scanner';
+import { inter } from '@/app/fonts';
+import Image from 'next/image';
 
-// Importa o Scanner dinamicamente, sem SSR, pois ele usa APIs do navegador (câmera)
+// Server-Side Rendering (SSR): This library requires browser APIs and will not work during SSR.
+// Ensure you only import and use it in client-side code:
 const Scanner = dynamic(
   () => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
   { ssr: false }
@@ -23,73 +27,71 @@ export default function Home() {
   };
 
   return (
-    <main
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        gap: '1rem',
-        padding: '1rem',
-      }}
-    >
-      <h1>Scanner de Código de Barras / QR Code</h1>
+    <main className={`${GeistSans.className} antialiased flex min-h-screen flex-col
+     items-center justify-center bg-black/95 text-white`}>
+      <Image
+        src="/fei-baja.png"
+        width={100}
+        height={100}
+        className="block p-[1px]"
+        alt="Logo FEI Baja"
+        loading="eager"
+      />
 
-      {!isScanning && (
+      <h1 className="text-center text-2xl font-bold">
+        Estoque: FEI Baja
+      </h1>
+
+      <p className="text-center text-xs">
+        Scanner de Código de Barras / QR Code
+      </p>
+
+
+      {/* qnd nao tiver a camera aberta, o botao de escanear aparece */}
+      {!isScanning && ( 
         <button
           onClick={() => {
             setCode(null);
             setError(null);
             setIsScanning(true);
           }}
-          style={{
-            padding: '0.75rem 1.5rem',
-            fontSize: '1rem',
-            borderRadius: '8px',
-            border: 'none',
-            background: '#0070f3',
-            color: '#fff',
-            cursor: 'pointer',
-          }}
+          className="rounded-xs bg-white text-black p-2 my-10 text-sm transition hover:bg-black hover:text-white"
         >
           Abrir câmera e escanear
         </button>
       )}
 
+      {/* camera aberta */}
       {isScanning && (
-        <div style={{ width: '100%', maxWidth: 400 }}>
+        <div className="w-full max-w-[400px]">
           <Scanner
             onScan={handleScan}
             onError={(err) => setError(String(err))}
-            constraints={{ facingMode: 'environment' }}
-            components={{
-              finder: true,
-              torch: true,
-            }}
+            constraints={{ facingMode: 'environment' }} //camera traseira
           />
           <button
             onClick={() => setIsScanning(false)}
-            style={{
-              marginTop: '0.5rem',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              border: '1px solid #ccc',
-              background: '#fff',
-              cursor: 'pointer',
-              width: '100%',
-            }}
+            className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 transition hover:bg-gray-100"
           >
             Cancelar
           </button>
         </div>
       )}
 
-      {code && <p>Código lido: {code}</p>}
 
+      {/* display qnd código eh lido */}
+      {code && (
+        <div className="w-full max-w-[400px] rounded-lg bg-green-100 p-4 text-center text-green-800">
+          <span className="font-semibold">Código lido:</span>
+          <p className="mt-1 break-all">{code}</p>
+        </div>
+      )}
+
+      {/* display caso dê erro */}
       {error && (
-        <div style={{ color: 'red', marginTop: '1rem' }}>
-          Erro: {error}
+        <div className="mt-4 w-full max-w-[400px] rounded-lg bg-red-100 p-4 text-center text-red-700">
+          <span className="font-semibold">Erro:</span>
+          <p className="mt-1 break-all">{error}</p>
         </div>
       )}
     </main>
