@@ -6,6 +6,7 @@ import { GeistSans } from "geist/font/sans";
 import type { IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { inter } from '@/app/fonts';
 import Image from 'next/image';
+import { Underline } from 'lucide-react';
 
 // Server-Side Rendering (SSR): This library requires browser APIs and will not work during SSR.
 // Ensure you only import and use it in client-side code:
@@ -29,6 +30,7 @@ export default function Home() {
   return (
     <main className={`${GeistSans.className} antialiased flex min-h-screen flex-col
      items-center justify-center bg-black/95 text-white`}>
+      <a href="/dashboard" className="underline">dashboard</a>
       <Image
         src="/fei-baja.png"
         width={100}
@@ -55,7 +57,7 @@ export default function Home() {
             setError(null);
             setIsScanning(true);
           }}
-          className="rounded-xs bg-white text-black p-2 my-10 text-sm transition hover:bg-black hover:text-white"
+          className="rounded-xs bg-white text-black p-[5px] m-1 text-sm transition hover:bg-black hover:text-white"
         >
           Abrir câmera e escanear
         </button>
@@ -71,7 +73,7 @@ export default function Home() {
           />
           <button
             onClick={() => setIsScanning(false)}
-            className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 transition hover:bg-gray-100"
+            className="mt-2 w-full rounded-lg border border-gray-300 bg-white text-black hover:bg-black hover:text-white px-4 py-2 transition"
           >
             Cancelar
           </button>
