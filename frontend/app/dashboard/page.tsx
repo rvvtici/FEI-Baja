@@ -43,12 +43,12 @@ export default function Page() {
             <h1 className="truncate text-lg font-semibold leading-tight">{current.label}</h1>
             <p className="truncate text-sm text-muted-foreground">{current.descricao}</p>
           </div>
-          <Button variant="outline" className="gap-2">
-            <QrCode className="h-4 w-4" />
             <a href="/">
-            <span className="hidden sm:inline">Escanear</span>
+              <Button variant="outline" className="gap-2">
+                <QrCode className="h-4 w-4" />
+                <span className="hidden sm:inline">Escanear</span>
+              </Button>
             </a>
-          </Button>
         </header>
 
         {/* Content */}

@@ -68,6 +68,10 @@ export default function Home() {
         <div className="w-full max-w-[400px]">
           <Scanner
             onScan={handleScan}
+            components={{
+              torch: true, // Show torch/flashlight button (if supported)
+              zoom: true, // Show zoom control (if supported)
+            }}
             onError={(err) => setError(String(err))}
             constraints={{ facingMode: 'environment' }} //camera traseira
           />
