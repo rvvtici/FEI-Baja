@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { GeistSans } from "geist/font/sans";
 import type { IDetectedBarcode, IScannerHandle } from '@yudiel/react-qr-scanner';
+import { useDevices } from '@yudiel/react-qr-scanner';
 import { inter } from '@/app/fonts';
 import Image from 'next/image';
 import { Underline } from 'lucide-react';
@@ -15,77 +16,42 @@ const Scanner = dynamic(
   { ssr: false }
 );
 
+// escolhe a câmera traseira principal (1x), evitando ultra-wide/macro
+function useBestBackCamera(): string | undefined {
+  const devices = useDevices(); // MediaDeviceInfo[]
+  const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!devices || devices.length === 0) return;
+
+    const isBack = (label: string) => /back|traseira|rear/i.test(label);
+    const isUltraWideOrMacro = (label: string) =>
+      /ultra ?wide|0\.5|macro|wide angle/i.test(label);
+
+    const backCameras = devices.filter((d) => isBack(d.label));
+    const mainBackCamera =
+      backCameras.find((d) => !isUltraWideOrMacro(d.label)) ?? backCameras[0];
+
+    if (mainBackCamera) {
+      setDeviceId(mainBackCamera.deviceId);
+    }
+  }, [devices]);
+
+  return deviceId;
+}
+
 export default function Home() {
 const [isScanning, setIsScanning] = useState(false);
 const [code, setCode] = useState<string | null>(null);
 const [error, setError] = useState<string | null>(null);
 
-// estado do zoom
-const [zoomSupported, setZoomSupported] = useState(false);
-const [zoomRange, setZoomRange] = useState({ min: 1, max: 1, step: 0.1 });
-const [zoom, setZoom] = useState(1);
-
 const scannerRef = useRef<IScannerHandle>(null);
+const deviceId = useBestBackCamera();
 
 const handleScan = (detectedCodes: IDetectedBarcode[]) => {
 if (detectedCodes.length > 0) {
 setCode(detectedCodes[0].rawValue);
 setIsScanning(false); // fecha a câmera após ler
-    }
-  };
-
-// checa se o dispositivo/navegador suporta zoom óptico via track capabilities
-const checkZoomCapability = useCallback(() => {
-const stream = scannerRef.current?.getStream();
-const track = stream?.getVideoTracks()[0];
-if (!track) return false;
-
-const capabilities = track.getCapabilities?.() as any;
-
-if (capabilities?.zoom) {
-setZoomSupported(true);
-setZoomRange({
-        min: capabilities.zoom.min,
-        max: capabilities.zoom.max,
-        step: capabilities.zoom.step || 0.1,
-      });
-setZoom(capabilities.zoom.min);
-return true;
-    } else {
-setZoomSupported(false);
-return true; // achou a track, só não tem zoom -> para de tentar
-    }
-  }, []);
-
-// fica tentando pegar o stream até a câmera estar pronta
-useEffect(() => {
-if (!isScanning) return;
-
-let attempts = 0;
-const interval = setInterval(() => {
-attempts++;
-const done = checkZoomCapability();
-if (done || attempts > 20) { // ~4s de tentativas (20 x 200ms)
-clearInterval(interval);
-      }
-    }, 200);
-
-return () => clearInterval(interval);
-  }, [isScanning, checkZoomCapability]);
-
-// aplica o zoom direto na track de vídeo
-const handleZoomChange = async (value: number) => {
-setZoom(value);
-const stream = scannerRef.current?.getStream();
-const track = stream?.getVideoTracks()[0];
-if (!track) return;
-
-try {
-await track.applyConstraints({
-        advanced: [{ zoom: value } as any],
-      });
-    } catch (err) {
-console.error('Erro ao aplicar zoom:', err);
     }
   };
 
@@ -127,39 +93,21 @@ className="rounded-xs bg-white text-black p-[5px] m-1 text-sm transition hover:b
 
 {/* camera aberta */}
 {isScanning && (
-<div className="w-full max-w-[400px]" style={{ touchAction: 'none' }}>
+<div className="w-full max-w-[400px]">
 <Scanner
 ref={scannerRef}
 onScan={handleScan}
 components={{
 torch: true, // Show torch/flashlight button (if supported)
-zoom: false, // controle nativo desligado, usamos o slider customizado abaixo
+zoom: true, // Show zoom control (if supported)
             }}
 onError={(err) => setError(String(err))}
-constraints={{ facingMode: 'environment' }} //camera traseira
+constraints={
+              deviceId
+                ? { deviceId: { exact: deviceId } } // força a lente 1x especificamente
+                : { facingMode: 'environment' } // fallback enquanto detecta as devices
+            }
 />
-
-{/* slider de zoom customizado */}
-{zoomSupported ? (
-<div className="mt-2 flex items-center gap-2">
-<span className="text-xs">🔍</span>
-<input
-type="range"
-min={zoomRange.min}
-max={zoomRange.max}
-step={zoomRange.step}
-value={zoom}
-onChange={(e) => handleZoomChange(Number(e.target.value))}
-className="w-full"
-/>
-<span className="text-xs w-10 text-right">{zoom.toFixed(1)}x</span>
-</div>
-          ) : (
-<p className="mt-2 text-center text-xs text-gray-400">
-              Zoom óptico não suportado neste dispositivo/navegador
-</p>
-          )}
-
 <button
 onClick={() => setIsScanning(false)}
 className="mt-2 w-full rounded-lg border border-gray-300 bg-white text-black hover:bg-black hover:text-white px-4 py-2 transition"
