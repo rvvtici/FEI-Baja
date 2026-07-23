@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { GeistSans } from "geist/font/sans";
 import type { IDetectedBarcode, IScannerHandle } from '@yudiel/react-qr-scanner';
@@ -38,7 +38,7 @@ setIsScanning(false); // fecha a câmera após ler
 const checkZoomCapability = useCallback(() => {
 const stream = scannerRef.current?.getStream();
 const track = stream?.getVideoTracks()[0];
-if (!track) return;
+if (!track) return false;
 
 const capabilities = track.getCapabilities?.() as any;
 
@@ -50,10 +50,28 @@ setZoomRange({
         step: capabilities.zoom.step || 0.1,
       });
 setZoom(capabilities.zoom.min);
+return true;
     } else {
 setZoomSupported(false);
+return true; // achou a track, só não tem zoom -> para de tentar
     }
   }, []);
+
+// fica tentando pegar o stream até a câmera estar pronta
+useEffect(() => {
+if (!isScanning) return;
+
+let attempts = 0;
+const interval = setInterval(() => {
+attempts++;
+const done = checkZoomCapability();
+if (done || attempts > 20) { // ~4s de tentativas (20 x 200ms)
+clearInterval(interval);
+      }
+    }, 200);
+
+return () => clearInterval(interval);
+  }, [isScanning, checkZoomCapability]);
 
 // aplica o zoom direto na track de vídeo
 const handleZoomChange = async (value: number) => {
@@ -119,7 +137,6 @@ zoom: false, // controle nativo desligado, usamos o slider customizado abaixo
             }}
 onError={(err) => setError(String(err))}
 constraints={{ facingMode: 'environment' }} //camera traseira
-onCameraStart={checkZoomCapability}
 />
 
 {/* slider de zoom customizado */}
