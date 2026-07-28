@@ -73,10 +73,18 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Source - https://stackoverflow.com/a/50323012
+# Posted by R.yan, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-07-28, License - CC BY-SA 4.0
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'feibaja_db',
+        'USER': 'feibaja',
+        'PASSWORD': 'feibaja',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
