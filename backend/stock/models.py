@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 class Pessoa(models.Model):
     nome = models.CharField(max_length=50)
@@ -11,14 +12,6 @@ class Pessoa(models.Model):
         #python3 manage.py migrate -> rodar models p/ banco de dados
         # area admin
 
-class User(models.Model):
-    username = models.CharField(max_length=50)
-    email = models.EmailField()
-    password = models.CharField(max_length=50)
-
-    def __str__(self) -> str:
-        return self.username
-    
 class Category(models.Model):
     name = models.CharField(max_length=50)
 

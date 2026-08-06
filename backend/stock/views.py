@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import Pessoa
+from rest_framework import viewsets
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
+from .models import Item, ItemMovement, Category, User, Pessoa
+from .serializers import ItemSerializer, ItemMovementSerializer, CategorySerializer
 
 # Create your views here.
 
@@ -27,3 +30,21 @@ def view_ferramentas(request):
         
 
         return HttpResponse(pessoas)
+
+class ItemViewSet(viewsets.ModelViewSet):
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+
+    permission_classes = [IsAuthenticated]
+
+class ItemMovementViewSet(viewsets.ModelViewSet):
+    queryset = ItemMovement.objects.all()
+    serializer_class = ItemMovement
+
+    permisssion_classes = [IsAuthenticated]
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    permission_classes = [IsAdminUser]
