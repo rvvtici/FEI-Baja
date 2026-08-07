@@ -34,8 +34,16 @@ def view_ferramentas(request):
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
-
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        status_filter = self.request.query_params.get('status', None)
+        if status_filter:
+            queryset = queryset.filter(status_count=status_filter)
+
+        return queryset
 
 class ItemMovementViewSet(viewsets.ModelViewSet):
     queryset = ItemMovement.objects.all()

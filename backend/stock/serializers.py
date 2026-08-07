@@ -2,8 +2,8 @@ from rest_framework import serializers
 from .models import Item, Category, ItemMovement, User
 
 class ItemSerializer(serializers.ModelSerializer):
-    status = serializers.ReadOnlyField() # @property do modelo Item
     category_name = serializers.CharField(source='category.name', read_only=True)
+    status = serializers.CharField(source='status_count', read_only=True)
 
     class Meta:
         model = Item

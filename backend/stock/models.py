@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import F, Case, When, Value, CharField
+from django.db.models.fields import CharField
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
@@ -18,6 +20,17 @@ class Category(models.Model):
     def __str__(self) -> str:
         return self.name
 
+class ItemManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            status_count=Case(
+                When(qty__lte=F('minimum_qty'), then=Value('Comprar')),
+                When(qty__lte=F('minimum_qty') * 1.20, then=Value('Atenção')),
+                default=Value('OK'),
+                output_field=CharField()
+            )
+        )
+
 class Item(models.Model):
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=100)
@@ -28,13 +41,7 @@ class Item(models.Model):
 
     barcode = models.CharField(max_length=50, unique = True,blank=True, null=True)
 
-    @property
-    def status(self):
-        if self.qty <= self.minimum_qty:
-            return 'Comprar'
-        if self.qty <= (self.minimum_qty * 1.20): # 20% a mais do mínimo (passível de alteração)
-            return 'Atenção'
-        return 'OK'
+    objects = ItemManager()
     
     def __str__(self) -> str:
         return self.name
