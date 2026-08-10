@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework import viewsets
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
 from .models import Item, ItemMovement, Category, User, Pessoa
 from .serializers import ItemSerializer, ItemMovementSerializer, CategorySerializer
 
@@ -31,10 +31,11 @@ def view_ferramentas(request):
 
         return HttpResponse(pessoas)
 
+#AllowAny somente para teste, depois mudar para IsAuthenticated/IsAdminUser
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -47,12 +48,16 @@ class ItemViewSet(viewsets.ModelViewSet):
 
 class ItemMovementViewSet(viewsets.ModelViewSet):
     queryset = ItemMovement.objects.all()
-    serializer_class = ItemMovement
+    serializer_class = ItemMovementSerializer
 
-    permisssion_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+
+#Descomentar somente quando tokens estiverem funcionando normalmente
+    # def perform_create(self, serializer):
+        # serializer.save(user=self.request.user)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-    permission_classes = [IsAdminUser]
+    permission_classes = [AllowAny]
