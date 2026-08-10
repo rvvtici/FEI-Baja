@@ -10,12 +10,31 @@ class ItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'code', 'name', 'category', 'category_name', 'qty', 'minimum_qty', 'barcode', 'status'] # Campos que o next.js vai receber do backend
 
 class ItemMovementSerializer(serializers.ModelSerializer):
+    item_name = serializers.CharField(source='item.name', read_only=True)
+    item_code = serializers.CharField(source='item.code', read_only=True)
+    user_name = serializers.CharField(source='user.username', read_only=True)
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     reason_display = serializers.CharField(source='get_reason_display', read_only=True)
 
     class Meta:
         model = ItemMovement
-        fields = '__all__'
+        fields = [
+            'id', 
+            'item', 
+            'item_name', 
+            'item_code', 
+            'user', 
+            'user_name',
+            'type', 
+            'type_display', 
+            'reason', 
+            'reason_display', 
+            'quantity', 
+            'observations', 
+            'date'
+        ]
+
+    read_only_fields = ['user']
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
