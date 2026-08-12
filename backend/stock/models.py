@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.db.models import F, Case, When, Value, CharField
 from django.db.models.fields import CharField
@@ -20,6 +22,7 @@ class Category(models.Model):
     def __str__(self) -> str:
         return self.name
 
+# Para filtros
 class ItemManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
@@ -39,10 +42,17 @@ class Item(models.Model):
     qty = models.PositiveIntegerField(default=0)
     minimum_qty = models.IntegerField(default=0)
 
-    barcode = models.CharField(max_length=50, unique = True,blank=True, null=True)
+    barcode = models.CharField(max_length=50, unique = True, blank=True, null=True)
 
     objects = ItemManager()
-    
+
+    def save(self, *args, **kwargs):
+        if not self.barcode:
+            unique_code = uuid.uuid4().hex[:13].upper()  # Gera um código único de 13 caracteres
+            self.barcode = unique_code
+            
+        super().save(*args, **kwargs)
+             
     def __str__(self) -> str:
         return self.name
 
