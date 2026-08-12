@@ -241,7 +241,7 @@ className="mt-2 w-full rounded-lg border border-gray-300 bg-white text-black hov
               id="observacoes-adicao-remover-item"
               type="number"
               // value={observacoes}
-              onChange={(e) => setObservaceos(e.target.value)}
+              onChange={(e) => setObservacoes(e.target.value)}
               // placeholder="Quantidade*:"
               className="h-7 mx-2 border-zinc-500"
               />
