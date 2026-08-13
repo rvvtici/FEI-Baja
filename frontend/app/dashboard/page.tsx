@@ -9,24 +9,24 @@ import { CompeticaoView } from "@/components/dashboard/competicao-view"
 import { OrcamentosView } from "@/components/dashboard/orcamentos-view"
 import { PlaceholderView } from "@/components/dashboard/placeholder-view"
 import { Button } from "@/components/ui/button"
-import { navItems, type TabId, type CategoriasId } from "@/lib/navigation"
+import { navItems, type TabId } from "@/lib/navigation"
 
 
-type SelectId = TabId | CategoriasId
+type SelectId = TabId
 
 export default function Page() {
   const [active, setActive] = useState<SelectId>("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  // const current = useMemo(() => navItems.find((n) => n.id === active)!, [active])
+  const current = useMemo(() => navItems.find((n) => n.id === active)!, [active])
   
   //alem dos itens principais tb pega as categorias
-  const current = navItems
-  .flatMap((item) => [
-    item,
-    ...(item.categorias ?? []),
-  ])
-  .find((item) => item.id === active)
+  // const current = navItems
+  // .flatMap((item) => [
+  //   item,
+  //   ...(item.categorias ?? []),
+  // ])
+  // .find((item) => item.id === active)
 
   return (
     <div className="flex min-h-screen bg-background">

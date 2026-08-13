@@ -18,26 +18,26 @@ export type TabId =
   | "estoque-geral"
   | "logs"
 
-export type CategoriasId = 
-  | "mecanica"
-  | "eletrica"
-  | "oficina"
-  | "cdm"
+// export type CategoriasId = 
+//   | "mecanica"
+//   | "eletrica"
+//   | "oficina"
+//   | "cdm"
 
-export type CategoriasEstoque = {
-  id: CategoriasId
-  label: string
-  descricao: string
-  icon: LucideIcon
-  // icon: LucideIcon
-}
+// export type CategoriasEstoque = {
+//   id: CategoriasId
+//   label: string
+//   descricao: string
+//   icon: LucideIcon
+//   // icon: LucideIcon
+// }
 
 export type NavItem = {
   id: TabId
   label: string
   icon: LucideIcon
   descricao: string
-  categorias?: CategoriasEstoque[]
+  // categorias?: CategoriasEstoque[]
 }
 
 export const navItems: NavItem[] = [
