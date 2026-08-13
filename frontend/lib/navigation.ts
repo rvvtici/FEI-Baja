@@ -43,10 +43,10 @@ export type NavItem = {
 export const navItems: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, descricao: "Visão geral da oficina" },
   { id: "estoque-geral", label: "Estoque", icon: Package, descricao: "Armários, sprays e óleos", 
-    categorias: [
-      {id: "Mecânica", label: "Mecânica", icon: Package, descricao: "mecanica"},
-      {id: "Elétrica", label: "Elétrica", icon: Package, descricao: "eletrica"}
-    ]  
+    // categorias: [
+    //   {id: "Mecânica", label: "Mecânica", icon: Package, descricao: "mecanica"},
+    //   {id: "Elétrica", label: "Elétrica", icon: Package, descricao: "eletrica"}
+    // ]  
   },
   { id: "ferramentas", label: "Ferramentas", icon: Wrench, descricao: "Empréstimos e disponibilidade" },
   { id: "orcamentos", label: "Orçamentos", icon: Wallet, descricao: "Gastos e verba anual" },
