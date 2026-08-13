@@ -8,9 +8,13 @@ import { cn } from "@/lib/utils"
 import Image from 'next/image';
 
 
+type SelectId = TabId
+// type SelectId = TabId | CategoriasId
+
+
 type AppSidebarProps = {
-  active: TabId
-  onSelect: (id: TabId) => void
+  active: SelectId
+  onSelect: (id: SelectId) => void
   open: boolean
   onClose: () => void
 }
@@ -65,21 +69,45 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = active === item.id
+            // const categorias = item.categorias
+            
+
             return (
-              <button
-                key={item.id}
-                onClick={() => onSelect(item.id)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                )}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <Icon className="h-4.5 w-4.5 shrink-0" />
-                <span className="font-medium">{item.label}</span>
-              </button>
+              <div key={item.id}>
+                <button
+                  onClick={() => onSelect(item.id)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors",
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  )}
+                >
+                  <Icon className="h-4.5 w-4.5 shrink-0" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+
+                {/* {categorias && (
+                  <div className="ml-10 mt-1 space-y-1">
+                    {categorias.map((categoria) => (
+                      <button
+                        key={categoria.id}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors",
+                          isActive
+                            ? "text-sidebar-primary-foreground"
+                            : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                        )}
+                        onClick={() => onSelect(categoria.id)}
+                      >
+                      <Icon className="h-4.5 w-4.5 shrink-0" />
+                      <span className="font-medium">{categoria.label}</span>
+
+                      </button>
+                    ))}
+                  </div>
+                )} */}
+              </div>
             )
           })}
         </nav>

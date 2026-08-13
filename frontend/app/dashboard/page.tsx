@@ -5,15 +5,28 @@ import { Menu, QrCode } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { DashboardView } from "@/components/dashboard/dashboard-view"
 import { CompeticaoView } from "@/components/dashboard/competicao-view"
+
+import { OrcamentosView } from "@/components/dashboard/orcamentos-view"
 import { PlaceholderView } from "@/components/dashboard/placeholder-view"
 import { Button } from "@/components/ui/button"
 import { navItems, type TabId } from "@/lib/navigation"
 
+
+type SelectId = TabId
+
 export default function Page() {
-  const [active, setActive] = useState<TabId>("dashboard")
+  const [active, setActive] = useState<SelectId>("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const current = useMemo(() => navItems.find((n) => n.id === active)!, [active])
+  
+  //alem dos itens principais tb pega as categorias
+  // const current = navItems
+  // .flatMap((item) => [
+  //   item,
+  //   ...(item.categorias ?? []),
+  // ])
+  // .find((item) => item.id === active)
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -40,8 +53,8 @@ export default function Page() {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-semibold leading-tight">{current.label}</h1>
-            <p className="truncate text-sm text-muted-foreground">{current.descricao}</p>
+            {/* <h1 className="truncate text-lg font-semibold leading-tight">{current.label}</h1>
+            <p className="truncate text-sm text-muted-foreground">{current.descricao}</p> */}
           </div>
             <a href="/">
               <Button variant="outline" className="gap-2">
@@ -57,8 +70,11 @@ export default function Page() {
             <DashboardView />
           ) : active === "competicao" ? (
             <CompeticaoView />
+          ) : active === "orcamentos" ? (
+            <OrcamentosView />
           ) : (
             <PlaceholderView icon={current.icon} title={current.label} description={current.descricao} />
+            // <PlaceholderView icon={Menu} title={"teste"} description={"teste"} />
           )}
         </main>
         
