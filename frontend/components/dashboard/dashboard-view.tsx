@@ -181,12 +181,17 @@ export function DashboardView() {
 
 // Função para registro de itens
 export function RegisterItemForm({onSuccessSave}: {onSuccessSave: () => void}){
-const { register, handleSubmit, reset } = useForm<NewItemFormData>()
+const { register, handleSubmit, reset,  watch, setValue } = useForm<NewItemFormData>()
 const [CreatedItem, setCreatedItem] = useState<Item | null>(null)
-const [categories, setCategories] = useState<{ id: number; name: string }[]>([])
+const [categories, setCategories] = useState<{ id: number; name: string; next_code: string; }[]>([])
+const selectedCategoryId = watch('category')
+const itemType = watch('item_type')
+
+const currentCategory = categories.find(cat => cat.id.toString() === selectedCategoryId?.toString())
+const prefix = currentCategory?.next_code ? currentCategory.next_code : 'Ex: ELT001'
+
 // Carrega as categorias
-useEffect(() => {
-  async function fetchCategories() {
+const fetchCategories = async () => {
     try { 
       const resp = await fetch('http://localhost:8000/api/categorias/')
       if (resp.ok) {
@@ -196,7 +201,8 @@ useEffect(() => {
     } catch (error) {
       console.error('Erro ao buscar categorias:', error)
     }
-  }
+}
+useEffect(() => {
   fetchCategories()
 }, [])
 
@@ -215,6 +221,8 @@ const SaveItem = async (data: NewItemFormData) => {
       setCreatedItem(newItem)
       onSuccessSave() //Atualiza imediatamente o dashboard
       reset()
+      fetchCategories()
+
     }
   } catch (error) {
     console.error('Erro ao criar item:', error)
@@ -255,6 +263,59 @@ const SaveItem = async (data: NewItemFormData) => {
         </div>
 
         <div>
+          <label className="text-sm font-medium text-muted-foreground">Tipo de Item</label>
+          <select 
+            {...register("item_type")}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="MATERIAL">Material</option>
+            <option value="TOOL">Ferramenta</option>
+            <option value="CONSUMABLE">Consumível</option>
+          </select>
+        </div>
+
+        {itemType === 'MATERIAL' && (
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Dimensões</label>
+            <input 
+              type="text" 
+              {...register("dimensions", { 
+                required: itemType === 'MATERIAL' ? "As dimensões são obrigatórias para materiais" : false 
+              })}
+              placeholder="Ex: 10 x 10 x 10 cm"
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        )}
+
+        {itemType === 'TOOL' && (
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Fabricante / Marca</label>
+            <input 
+              type="text" 
+              {...register("brand", { 
+                required: itemType === 'TOOL' ? "A marca é obrigatória para ferramentas" : false 
+              })} 
+              placeholder="Ex: Makita "
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        )}
+
+        {itemType === 'CONSUMABLE' && (
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Vencimento</label>
+            <input 
+              type="date" 
+              {...register("brand", { 
+                required: itemType === 'CONSUMABLE' ? "O vencimento é obrigatório para consumíveis" : false 
+              })} 
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        )}
+        
+       <div>
           <label className="text-sm font-medium text-muted-foreground">Categoria</label>
           <select 
             {...register("category")}
@@ -262,26 +323,26 @@ const SaveItem = async (data: NewItemFormData) => {
           >
             <option value="">Selecione uma categoria...</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="text-sm font-medium text-muted-foreground">Código</label>
-          <input 
-            type="text" 
-            {...register("code")} 
-            placeholder="Ex: ELT001" 
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
+        <label className="text-sm font-medium text-muted-foreground">
+          Código <span className="text-xs text-muted-foreground">(Gerado automaticamente se vazio)</span>
+        </label>
+        <input 
+          type="text" 
+          {...register("code")} 
+          placeholder={prefix}
+          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        />
+      </div>
         
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="text-sm font-medium text-muted-foreground">Estoque inicial</label>
+            <label className="text-sm font-medium text-muted-foreground">Estoque inicial </label>
             <input 
               type="number" 
               {...register("qty")} 

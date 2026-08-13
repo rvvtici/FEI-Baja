@@ -1,6 +1,7 @@
 export interface Item {
     id: number;
     code: string;
+    code_prefix: string;
     name: string;
     category: string;
     category_name: string;
@@ -8,6 +9,10 @@ export interface Item {
     minimum_qty: number;
     barcode: string;
     status: string;
+    item_type: 'TOOL' | 'CONSUMABLE' | 'MATERIAL';
+    brand?: string;
+    expiration?: string;
+    dimensions?: string;
 }
 
 export interface ItemMovement {

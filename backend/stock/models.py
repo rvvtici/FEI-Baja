@@ -18,9 +18,11 @@ class Pessoa(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
+    code_prefix =  models.CharField(max_length=3, help_text="Ex: MO, CT, ELT")
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.parent.name} > {self.name}" if self.parent else self.name
 
 # Para filtros
 class ItemManager(models.Manager):
@@ -35,26 +37,68 @@ class ItemManager(models.Manager):
         )
 
 class Item(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    class ItemTypes(models.TextChoices):
+        TOOL = 'TOOL', 'Ferramenta'
+        CONSUMABLE = 'CONSUMABLE', 'Consumível'
+        MATERIAL = 'MATERIAL', 'Material'
+
+    item_type = models.CharField(max_length=10, choices=ItemTypes.choices)
     name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20, unique=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
     qty = models.PositiveIntegerField(default=0)
     minimum_qty = models.IntegerField(default=0)
-
     barcode = models.CharField(max_length=50, unique = True, blank=True, null=True)
+
+    brand = models.CharField(max_length=50, blank=True, null=True)
+    expiration = models.DateField(blank=True, null=True)
+    dimensions = models.CharField(max_length=50, blank=True, null=True)
 
     objects = ItemManager()
 
+    def clean(self):
+        super().clean()
+
+        if self.name and self.category:
+            duplicate = Item.objects.filter(
+                category = self.category,
+                name__iexact = self.name
+            ).exclude(pk=self.pk)
+
+            if duplicate.exists():
+                raise ValidationError(f"Já existe um item cadastrado com o nome '{self.name}' nesta categoria!")
+
+        if self.item_type == self.ItemTypes.TOOL and not self.brand:
+            raise ValidationError({
+                'brand' : 'A ferramenta precisa de uma marca'
+            })
+
+        if self.item_type == self.ItemTypes.CONSUMABLE and not self.expiration:
+            raise ValidationError({
+                'consumable' : 'O consumível precisa de uma data de validade'
+            })
+
+        if self.item_type == self.ItemTypes.MATERIAL and not self.dimensions:
+            raise ValidationError({
+                'material' : 'O material precisa de dimensões'
+            })
+
+
     def save(self, *args, **kwargs):
         if not self.barcode:
-            unique_code = uuid.uuid4().hex[:13].upper()  # Gera um código único de 13 caracteres
-            self.barcode = unique_code
-            
+            self.barcode = uuid.uuid4().hex[:13].upper()  # Gera um código único de 13 caracteres
+
+        if not self.code and self.category:
+            prefix = self.category.code_prefix
+            last = self.__class__.objects.filter(code__startswith=prefix).order_by('-code').first()
+            num = int(last.code[len(prefix):]) + 1 if last else 1
+            self.code = f"{prefix}{num:03d}"
+
         super().save(*args, **kwargs)
-             
+
     def __str__(self) -> str:
-        return self.name
+        return f"[{self.code}] {self.name} ({self.item_type})"
 
 class ItemMovement(models.Model):  
     class Types(models.TextChoices):

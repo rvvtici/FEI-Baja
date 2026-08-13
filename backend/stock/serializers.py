@@ -49,6 +49,20 @@ class ItemMovementSerializer(serializers.ModelSerializer):
     read_only_fields = ['user']
 
 class CategorySerializer(serializers.ModelSerializer):
+    next_code = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = "__all__"
+
+    def get_next_code(self, obj):
+        last_item = Item.objects.filter(category=obj, code__startswith=obj.code_prefix).order_by('-code').first()
+
+        if last_item:
+            try:
+                num = int(last_item.code[len(obj.code_prefix):]) + 1
+                return f"{obj.code_prefix}{num:03d}"
+            except ValueError:
+                return None
+        else:
+            return f"{obj.code_prefix}001"
