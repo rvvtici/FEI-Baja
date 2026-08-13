@@ -1,7 +1,7 @@
 "use client"
 
 import { Bell, User, AlertTriangle, X } from "lucide-react"
-import { navItems, type TabId, type CategoriasId } from "@/lib/navigation"
+import { navItems, type TabId } from "@/lib/navigation"
 import { items, isBaixoEstoque } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
