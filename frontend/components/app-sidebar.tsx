@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils"
 import Image from 'next/image';
 
 
-type SelectId = TabId | CategoriasId
+type SelectId = TabId
+// type SelectId = TabId | CategoriasId
+
 
 type AppSidebarProps = {
   active: SelectId
@@ -67,7 +69,7 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = active === item.id
-            const categorias = item.categorias
+            // const categorias = item.categorias
             
 
             return (
@@ -85,7 +87,7 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
                   <span className="font-medium">{item.label}</span>
                 </button>
 
-                {categorias && (
+                {/* {categorias && (
                   <div className="ml-10 mt-1 space-y-1">
                     {categorias.map((categoria) => (
                       <button
@@ -104,7 +106,7 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
                       </button>
                     ))}
                   </div>
-                )}
+                )} */}
               </div>
             )
           })}
