@@ -50,11 +50,6 @@ export function OrcamentosView() {
 
   const filtered = searchFilter(itens)
 
-  //Handling the input on our search bar
-  const handleChange = (e) => {
-    setPesquisa(e.target.value)
-  }
-
   function adicionarItem() {
     const nome = novoNome.trim()
     const qtd = Number.parseInt(novaQtd, 10)
