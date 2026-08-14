@@ -24,7 +24,7 @@ class ItemMovementSerializer(serializers.ModelSerializer):
     item_code = serializers.CharField(source='item.code', read_only=True)
     item_category_name = serializers.CharField(source='item.category.name', read_only=True)
     user_name = serializers.CharField(source='user.username', read_only=True)
-    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    action_display = serializers.CharField(source='get_action_display', read_only=True)
     reason_display = serializers.CharField(source='get_reason_display', read_only=True)
 
     class Meta:
@@ -37,8 +37,8 @@ class ItemMovementSerializer(serializers.ModelSerializer):
             'item_category_name',
             'user', 
             'user_name',
-            'type', 
-            'type_display', 
+            'action', 
+            'action_display', 
             'reason', 
             'reason_display', 
             'quantity', 

@@ -21,7 +21,7 @@ import { StatCard } from "@/components/dashboard/stat-card"
 import { categoriaLabels, type MovimentacaoTipo } from "@/lib/mock-data"
 
 type ItemDashboard = Pick<Item, "id" | "name"  | "code" | "status" | "qty" | "minimum_qty" | "category_name">
-type ItemMovementDashboard = Pick<ItemMovement, "id" | "item" | "item_name" | "item_code" | "item_category_name" | "quantity" | "user_name" | "type" | "type_display" | "reason" | "reason_display" | "date">
+type ItemMovementDashboard = Pick<ItemMovement, "id" | "item" | "item_name" | "item_code" | "item_category_name" | "quantity" | "user_name" | "action" | "action_display" | "reason" | "reason_display" | "date">
 type NewItemFormData = Omit<Item, "id" | "status" | "barcode" | "category_name">
 
 const movTipoConfig: Record<
@@ -103,14 +103,16 @@ export function DashboardView() {
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         {/* Coluna da Esquerda (Movimentações e Alertas) */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="lg:col-span-2 grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          {/* CARD de Movimentações */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Movimentações recentes</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
+              {/* Retornamos o .slice(0, 5) para mostrar só as 5 últimas */}
               {movimentacoes.slice(0, 5).map((mov) => {
-                const cfg = movTipoConfig[mov.type.toLowerCase() as MovimentacaoTipo] || movTipoConfig['retirada']
+                const cfg = movTipoConfig[mov.action.toLowerCase() as MovimentacaoTipo] || movTipoConfig['retirada']
                 const Icon = cfg.icon
                 return (
                   <div key={mov.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted">
@@ -133,6 +135,7 @@ export function DashboardView() {
             </CardContent>
           </Card>
 
+          {/* CARD de Reposições */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -141,7 +144,8 @@ export function DashboardView() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {abaixoMinimo.map((item) => (
+              {/* Adicionamos o .slice(0, 5) aqui também para o card não ficar gigante se faltar muita peça */}
+              {abaixoMinimo.slice(0, 5).map((item) => (
                 <div key={item.id} className="rounded-lg border border-border p-3">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-medium leading-snug">{item.name}</p>

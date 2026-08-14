@@ -23,8 +23,8 @@ export interface ItemMovement {
     item_category_name: string;
     user : string;
     user_name: string;
-    type: string;
-    type_display: string;
+    action: string;
+    action_display: string;
     reason: string;
     reason_display: string;
     quantity: number;

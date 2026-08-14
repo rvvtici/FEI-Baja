@@ -101,52 +101,45 @@ class Item(models.Model):
         return f"[{self.code}] {self.name} ({self.item_type})"
 
 class ItemMovement(models.Model):  
-    class Types(models.TextChoices):
-        #PARA ICONS
-        RETIRADA = 'RETIRADA', 'Retirada' #ALTERAR PARA PADRONIZAR 
-        DEVOLUCAO = 'DEVOLUCAO', 'Devolução'
-        EMPRESTIMO = 'EMPRESTIMO', 'Empréstimo'
-        CADASTRO = 'CADASTRO', 'Cadastro'
-        COMPRA = 'COMPRA', 'Compra'
+    class ActionTypes(models.TextChoices):
+        IN = 'IN', 'Entrada (+)'
+        OUT = 'OUT', 'Saída (-)'
 
     class Reasons(models.TextChoices):
         USAGE = 'USAGE', 'Uso Interno'
+        LOAN = 'LOAN', 'Empréstimo'
         LOSS = 'LOSS', 'Perda'
         BREAKAGE = 'BREAKAGE', 'Quebra'
-        EXCHANGE = 'EXCHANGE', 'Troca'
-        PURCHASE = 'PURCHASE', 'Compra'
-        EXPIRED = 'EXPIRED', 'Vencido'
+        PURCHASE = 'PURCHASE', 'Compra / Reposição'
+        RETURN = 'RETURN', 'Devolução de Empréstimo'
+        MAINTENANCE = 'MAINTENANCE', 'Manutenção'
 
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    type = models.CharField(max_length=15, choices=Types.choices)
-    reason = models.CharField(max_length=10, choices=Reasons.choices, default=Reasons.USAGE)
+    action = models.CharField(max_length=3, choices=ActionTypes.choices)
+    reason = models.CharField(max_length=20, choices=Reasons.choices, default=Reasons.USAGE)
     quantity = models.IntegerField()
     observations = models.TextField(blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        saidas = [self.Types.RETIRADA, self.Types.EMPRESTIMO]
-        if self.type in saidas and self.quantity > self.item.qty:
-            raise ValidationError("Não é possível realizar a saída, pois a quantidade é maior que o estoque atual.")
+        if self.action == self.ActionTypes.OUT and self.quantity > self.item.qty:
+            raise ValidationError("Não é possível realizar a retirada, pois a quantidade solicitada é maior do que a presente")
 
     #Função save() sobrescrita para atualizar o estoque do item automaticamente após uma movimentação
     def save(self, *args, **kwargs):
         is_new = self.pk is None 
 
-        self.clean() # Roda a validação (quantidade de saída não pode ser maior que o estoque atual)
+        self.full_clean() # Roda a validação (quantidade de saída não pode ser maior que o estoque atual)
 
         super().save(*args, **kwargs)
         
         if is_new:
-            entradas = [self.Types.DEVOLUCAO, self.Types.CADASTRO, self.Types.COMPRA]
-            saidas = [self.Types.RETIRADA, self.Types.EMPRESTIMO]
-
-            if self.type in entradas:
+            if self.action == self.ActionTypes.IN:
                 self.item.qty += self.quantity
-            elif self.type in saidas:
+            elif self.type == self.ActionTypes.OUT:
                 self.item.qty -= self.quantity
             self.item.save()
         
     def __str__(self) -> str:
-        return f"{self.get_type_display()} | {self.item.name} | Qtd: {self.quantity}"
+        return f"{self.get_action_display()} | {self.item.name} | Qtd: {self.quantity}"
