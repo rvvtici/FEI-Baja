@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react"
 // import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StatCard } from "@/components/dashboard/stat-card"
+import React from "react";
 import {
   Boxes,
   CheckCircle2,
@@ -39,6 +40,20 @@ export function OrcamentosView() {
   const [novaQtd, setNovaQtd] = useState("1")
   const [novoPreco, setNovoPreco] = useState("1")
   const [itens, setItens] = useState<ItemProva[]>(itensProvaInicial)
+  const [pesquisa, setPesquisa] = useState("")
+
+  const searchFilter = (array: ItemProva[]) => {
+    const termo = pesquisa.trim().toLowerCase()
+    if (!termo) return array
+    return array.filter((el) => el.nome.toLowerCase().includes(termo))
+  }
+
+  const filtered = searchFilter(itens)
+
+  //Handling the input on our search bar
+  const handleChange = (e) => {
+    setPesquisa(e.target.value)
+  }
 
   function adicionarItem() {
     const nome = novoNome.trim()
@@ -63,71 +78,67 @@ export function OrcamentosView() {
   return (
     <div className="space-y-6">
 
-      {/* Métricas */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Orçamento atual" value={2000.0} hint={`reais restantes`} icon={PiggyBank} />
+      <div className="flex flex-wrap gap-3">
+        <Button className="gap-2"><ArrowUpRight className="h-4 w-4" />Acessar anos anteriores</Button>
+        {/* <Button variant="outline" className="gap-2"><ArrowDownLeft className="h-4 w-4" />Devolver item</Button>
+        <Button variant="outline" className="gap-2"><Plus className="h-4 w-4" />Novo item</Button> */}
       </div>
 
-        <div className="lg:col-span-2 flex flex-row gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Orçamento restante" value={2000.0} icon={PiggyBank} />
+        <StatCard label="Itens cadastrados em 2026" value={0} hint={`0 unidades no total`} icon={Boxes} />
+      </div>
 
-            <div className="bg-card rounded-xl border border-border p-6 shadow-sm w-full">
-                <h3 className="text-lg font-semibold mb-4">Itens registrados em 2026</h3>
-                
-                <span className="flex flex-row">
-                  <Input
-                    id="pequisa"
-                    // value={novoNome}
-                    // onChange={(e) => setNovoNome(e.target.value)}
-                    // onKeyDown={(e) => {
-                      //   if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) adicionarItem()
-                      // }}
-                      placeholder="Ex: EL001"
-                      className="h-9"
-                      />
-                    <Search className="ml-2 m-1" />
-                  </span>
-                {/* <RegisterItemForm onSuccessSave={loadData} />  */}
-                  <div className="space-y-1">
 
-                    <div className="font-semibold text-lg group flex items-center gap-3 rounded-lg pt-3 transition-colors hover:bg-muted">
-                      <span className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                        <span className={`min-w-0 flex-1 truncate`}>
-                          <p>Nome</p>
-                        </span>
-                          <p>Preço</p>           
-                      </span>
-                    </div>
 
-                  {itens.map((item) => (
-                    <div
-                      key={item.id}
-                      className="group flex items-center gap-3 rounded-lg p-1 transition-colors hover:bg-muted"
-                    >
-                      <span
-                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      >
-                        <span className={`min-w-0 flex-1 truncate text-sm`}>
+      <div className="flex flex-row gap-4">
+        <div className="bg-card rounded-xl border border-border p-6 shadow-sm flex-[2]">
+          <h3 className="text-xl text-center font-semibold mb-4">Itens registrados em 2026</h3>
+              
+            <span className="flex flex-row">
+              <Input
+                id="pequisa"
+                value={pesquisa}
+                onChange={(e) => setPesquisa(e.target.value)}
+                placeholder="Ex: EL001"
+                className="h-9"
+                />
+                <Search className="ml-2 m-1" />
+              </span>
 
-                          {item.nome}
-                        </span>
 
-                          {item.quantidade}
-                      </span>
+              <table className="rounded-lg border my-2 shadow-md table-auto w-full border-separate border-spacing-0 overflow-hidden">
+                <thead className="items-center">
+                  <tr className="">
+                    <th dir="ltr" className="rounded-s-lg border p-1">ID</th>
+                    <th dir="ltr" className="border p-1">Nome</th>
+                    <th dir="rtl" className="rounded-s-lg border p-1">Preço</th>
+                  </tr>
+                </thead>
+                <tbody>
+                        {filtered.map((item) => (
+                          <React.Fragment
+                            key={item.id}
+                          >
+                          <tr className="hover:bg-muted">
+                            <td className="text-center p-1 col-span-1">{item.id}</td>
+                            <td className="p-1 col-span-4">{item.nome}</td>
+                            <td className="text-center p-1 col-span-1">{item.quantidade}</td>
+                          </tr>
+                        </React.Fragment>
+                        ))}
+                        {itens.length === 0 && (
+                          <p className="py-6 text-center text-sm text-muted-foreground">Nenhum item adicionado ainda.</p>
+                        )}
+                    </tbody>
+                  </table>
 
-                    </div>
-                  ))}
-                  {itens.length === 0 && (
-                    <p className="py-6 text-center text-sm text-muted-foreground">Nenhum item adicionado ainda.</p>
-                  )}
-                </div>
             </div>
 
 
 
-
-
-            <div className="bg-card rounded-xl border border-border p-6 shadow-sm w-full">
-                <h3 className="text-lg font-semibold mb-4">Registrar Novo Item</h3>
+            <div className="bg-card rounded-xl border border-border p-6 shadow-sm w-full flex-1">
+                <h3 className="text-lg font-semibold mb-4 text-center">Registrar Novo Item</h3>
                 {/* <RegisterItemForm onSuccessSave={loadData} />  */}
                 <div className="flex items-end gap-2">
                   <div className="flex-1">
