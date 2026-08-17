@@ -5,8 +5,9 @@ import { Menu, QrCode } from "lucide-react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { DashboardView } from "@/components/dashboard/dashboard-view"
 import { CompeticaoView } from "@/components/dashboard/competicao-view"
-
 import { OrcamentosView } from "@/components/dashboard/orcamentos-view"
+import { FerramentasView } from "@/components/dashboard/ferramentas-view"
+import { LogsView } from "@/components/dashboard/logs-view"
 import { PlaceholderView } from "@/components/dashboard/placeholder-view"
 import { Button } from "@/components/ui/button"
 import { navItems, type TabId } from "@/lib/navigation"
@@ -72,7 +73,11 @@ export default function Page() {
             <CompeticaoView />
           ) : active === "orcamentos" ? (
             <OrcamentosView />
-          ) : (
+          ) : active === "logs" ? (
+            <LogsView />
+          ): active === "ferramentas" ? (
+            <FerramentasView />
+          ):(
             <PlaceholderView icon={current.icon} title={current.label} description={current.descricao} />
             // <PlaceholderView icon={Menu} title={"teste"} description={"teste"} />
           )}
