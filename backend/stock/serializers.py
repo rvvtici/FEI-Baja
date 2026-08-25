@@ -23,6 +23,7 @@ class ItemMovementSerializer(serializers.ModelSerializer):
     item_name = serializers.CharField(source='item.name', read_only=True)
     item_code = serializers.CharField(source='item.code', read_only=True)
     item_category_name = serializers.CharField(source='item.category.name', read_only=True)
+    available_qty = serializers.CharField(source='item.qty', read_only=True)
     user_name = serializers.CharField(source='user.username', read_only=True)
     action_display = serializers.CharField(source='get_action_display', read_only=True)
     reason_display = serializers.CharField(source='get_reason_display', read_only=True)
@@ -42,6 +43,7 @@ class ItemMovementSerializer(serializers.ModelSerializer):
             'reason', 
             'reason_display', 
             'quantity', 
+            'available_qty',
             'observations', 
             'date'
         ]
