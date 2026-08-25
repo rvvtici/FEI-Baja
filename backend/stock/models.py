@@ -137,7 +137,7 @@ class ItemMovement(models.Model):
         if is_new:
             if self.action == self.ActionTypes.IN:
                 self.item.qty += self.quantity
-            elif self.type == self.ActionTypes.OUT:
+            elif self.action == self.ActionTypes.OUT:
                 self.item.qty -= self.quantity
             self.item.save()
         
