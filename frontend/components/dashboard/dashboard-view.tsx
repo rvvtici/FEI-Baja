@@ -13,15 +13,18 @@ import {
   ArrowDownLeft,
   Plus,
   AlertTriangle,
+  Check,
+  Minus,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { categoriaLabels, type MovimentacaoTipo } from "@/lib/mock-data"
+import { InventoryTable } from './inventory-table' 
 
 type ItemDashboard = Pick<Item, "id" | "name"  | "code" | "status" | "qty" | "minimum_qty" | "category_name">
-type ItemMovementDashboard = Pick<ItemMovement, "id" | "item" | "item_name" | "item_code" | "item_category_name" | "quantity" | "user_name" | "action" | "action_display" | "reason" | "reason_display" | "date">
+type ItemMovementDashboard = ItemMovement
 type NewItemFormData = Omit<Item, "id" | "status" | "barcode" | "category_name">
 
 const movTipoConfig: Record<
@@ -44,9 +47,19 @@ function formatHora(iso: string) {
   })
 }
 
+
+
 export function DashboardView() {
   const [items, setItems] = useState<ItemDashboard[]>([])
   const [movimentacoes, setMovimentacoes] = useState<ItemMovementDashboard[]>([])
+  const [activePanel, setActivePanel] = useState<'register' | 'movement'>('register')
+  const [itemToMove, setItemToMove] = useState<Item | null>(null)
+
+  const handleSelectTableItem = (item: Item) => {
+    setItemToMove(item)
+    setActivePanel('movement')
+    window.scrollTo({top: 0, behavior: 'smooth'})
+  }
 
   const loadData = async () => {
       // const token = localStorage.getItem('access_token'); Somente para testes
@@ -80,11 +93,30 @@ export function DashboardView() {
 
   return (
     <div className="space-y-6">
-      {/* Ações rápidas */}
       <div className="flex flex-wrap gap-3">
-        <Button className="gap-2"><ArrowUpRight className="h-4 w-4" />Retirar item</Button>
-        <Button variant="outline" className="gap-2"><ArrowDownLeft className="h-4 w-4" />Devolver item</Button>
-        <Button variant="outline" className="gap-2"><Plus className="h-4 w-4" />Novo item</Button>
+        <Button 
+          onClick={() => setActivePanel('movement')} 
+          variant={activePanel === 'movement' ? 'default' : 'outline'} 
+          className="gap-2"
+        >
+          <ArrowUpRight className="h-4 w-4" />Retirar item
+        </Button>
+        
+        <Button 
+          onClick={() => setActivePanel('movement')} 
+          variant={activePanel === 'movement' ? 'default' : 'outline'} 
+          className="gap-2"
+        >
+          <ArrowDownLeft className="h-4 w-4" />Devolver item
+        </Button>
+        
+        <Button 
+          onClick={() => setActivePanel('register')} 
+          variant={activePanel === 'register' ? 'default' : 'outline'} 
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />Novo item
+        </Button>
       </div>
 
       {/* Métricas */}
@@ -102,90 +134,99 @@ export function DashboardView() {
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-        {/* Coluna da Esquerda (Movimentações e Alertas) */}
-        <div className="lg:col-span-2 grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-          {/* CARD de Movimentações */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Movimentações recentes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              {/* Retornamos o .slice(0, 5) para mostrar só as 5 últimas */}
-              {movimentacoes.slice(0, 5).map((mov) => {
-                const cfg = movTipoConfig[mov.action.toLowerCase() as MovimentacaoTipo] || movTipoConfig['retirada']
-                const Icon = cfg.icon
-                return (
-                  <div key={mov.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted">
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${cfg.className}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{mov.item_name}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {cfg.label} · {mov.quantity}x · {mov.user_name}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="font-mono text-xs text-muted-foreground">{mov.item_code}</p>
-                      <p className="text-xs text-muted-foreground">{formatHora(mov.date)}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
+        
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-card rounded-xl border border-border shadow-sm flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-border bg-muted/10">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Inventário Geral</h3>
+            </div>
+            <InventoryTable items={items} onMovimentarClick={handleSelectTableItem} />
+          </div>
 
-          {/* CARD de Reposições */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <AlertTriangle className="h-4 w-4 text-warning" />
-                Reposição necessária
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Adicionamos o .slice(0, 5) aqui também para o card não ficar gigante se faltar muita peça */}
-              {abaixoMinimo.slice(0, 5).map((item) => (
-                <div key={item.id} className="rounded-lg border border-border p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium leading-snug">{item.name}</p>
-                    <Badge variant="outline" className="shrink-0 font-mono text-xs">
-                      {item.code}
-                    </Badge>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+            
+            {/* CARD de Movimentações */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Movimentações recentes</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {movimentacoes.slice(0, 5).map((mov) => {
+                  const cfg = movTipoConfig[mov.action.toLowerCase() as MovimentacaoTipo] || movTipoConfig['retirada']
+                  const Icon = cfg.icon
+                  return (
+                    <div key={mov.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted">
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${cfg.className}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{mov.item_name}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {cfg.label} · {mov.quantity}x · {mov.user_name}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="font-mono text-xs text-muted-foreground">{mov.item_code}</p>
+                        <p className="text-xs text-muted-foreground">{formatHora(mov.date)}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </CardContent>
+            </Card>
+
+            {/* CARD de Reposições */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                  Reposição necessária
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {abaixoMinimo.slice(0, 5).map((item) => (
+                  <div key={item.id} className="rounded-lg border border-border p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium leading-snug">{item.name}</p>
+                      <Badge variant="outline" className="shrink-0 font-mono text-xs">
+                        {item.code}
+                      </Badge>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{item.category_name}</span>
+                      <span className="font-medium text-warning">
+                        {item.qty} de {item.minimum_qty} mín.
+                      </span>
+                    </div>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-warning"
+                        style={{
+                          width: `${Math.min(100, (item.qty / item.minimum_qty) * 100)}%`,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{item.category_name}</span>
-                    <span className="font-medium text-warning">
-                      {item.qty} de {item.minimum_qty} mín.
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-warning"
-                      style={{
-                        width: `${Math.min(100, (item.qty / item.minimum_qty) * 100)}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+
+          </div>
         </div>
 
-        {/* Coluna da Direita (Formulário) */}
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm w-full">
-          <h3 className="text-lg font-semibold mb-4">Cadastrar Novo Item</h3>
-          <RegisterItemForm onSuccessSave={loadData} /> 
+        <div className="lg:col-span-1 bg-card rounded-xl border border-border p-6 shadow-sm w-full h-fit">
+          {activePanel === 'register' && <RegisterItemForm onSuccessSave={loadData} />}
         </div>
+
       </div>
+
     </div>
   )
 }
 
 // Função para registro de itens
 export function RegisterItemForm({onSuccessSave}: {onSuccessSave: () => void}){
-const { register, handleSubmit, reset,  watch, setValue } = useForm<NewItemFormData>()
+const { register, handleSubmit, reset,  watch } = useForm<NewItemFormData>()
 const [CreatedItem, setCreatedItem] = useState<Item | null>(null)
 const [categories, setCategories] = useState<{ id: number; name: string; next_code: string; }[]>([])
 const selectedCategoryId = watch('category')
@@ -377,4 +418,3 @@ const SaveItem = async (data: NewItemFormData) => {
     </form>
   )
 }
-

@@ -28,6 +28,7 @@ export interface ItemMovement {
     reason: string;
     reason_display: string;
     quantity: number;
+    available_qty: number;
     observations: string;
     date: string;
 }
