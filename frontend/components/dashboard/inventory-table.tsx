@@ -18,7 +18,7 @@ export function InventoryTable({ items, onMovimentarClick }: InventoryTableProps
               <th className="px-4 py-2.5 font-semibold">Nome da Peça</th>
               <th className="px-4 py-2.5 font-semibold">Categoria</th>
               <th className="px-4 py-2.5 font-semibold">Estoque</th>
-              <th className="px-4 py-2.5 font-semibold text-right">Ação</th>
+              <th className="px-15 py-2.5 font-semibold text-right">Ação</th>
             </tr>
           </thead>
 
@@ -36,7 +36,7 @@ export function InventoryTable({ items, onMovimentarClick }: InventoryTableProps
                   {item.category_name || "Geral"}
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`font-bold ${item.qty < 10 ? 'text-red-500' : 'text-green-500'}`}>
+                  <span className={`font-bold ${item.qty <= item.minimum_qty ? 'text-red-500' : 'text-green-500'}`}>
                     {item.qty} un
                   </span>
                 </td>
