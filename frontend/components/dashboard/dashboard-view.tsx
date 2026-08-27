@@ -21,23 +21,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { categoriaLabels, type MovimentacaoTipo } from "@/lib/mock-data"
-import { InventoryTable } from './inventory-table' 
+import { InventoryTable } from "./inventory-table"
+import {ItemMovimentForm} from './item-movimentation-card'
 
 type ItemDashboard = Pick<Item, "id" | "name"  | "code" | "status" | "qty" | "minimum_qty" | "category_name">
-type ItemMovementDashboard = ItemMovement
 type NewItemFormData = Omit<Item, "id" | "status" | "barcode" | "category_name">
 
-const movTipoConfig: Record<
-  MovimentacaoTipo,
-  { label: string; icon: typeof ArrowUpRight; className: string }
-> = {
-  retirada: { label: "Retirada", icon: ArrowUpRight, className: "bg-primary/10 text-primary" },
-  devolucao: { label: "Devolução", icon: ArrowDownLeft, className: "bg-success/15 text-success" },
-  emprestimo: { label: "Empréstimo", icon: Handshake, className: "bg-warning/15 text-warning" },
-  cadastro: { label: "Cadastro", icon: Plus, className: "bg-secondary text-secondary-foreground" },
-  compra: { label: "Compra", icon: Plus, className: "bg-secondary text-secondary-foreground" },
+const movTipoConfig: Record<string, { label: string; icon: any; className: string }> = {
+  out: { label: "Retirada", icon: ArrowUpRight, className: "bg-red-500/10 text-red-500" },
+  in: { label: "Devolução", icon: ArrowDownLeft, className: "bg-green-500/10 text-green-500" },
 }
-
 function formatHora(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit",
@@ -51,7 +44,7 @@ function formatHora(iso: string) {
 
 export function DashboardView() {
   const [items, setItems] = useState<ItemDashboard[]>([])
-  const [movimentacoes, setMovimentacoes] = useState<ItemMovementDashboard[]>([])
+  const [movimentacoes, setMovimentacoes] = useState<ItemMovement[]>([])
   const [activePanel, setActivePanel] = useState<'register' | 'movement'>('register')
   const [itemToMove, setItemToMove] = useState<Item | null>(null)
 
@@ -86,7 +79,7 @@ export function DashboardView() {
   }, [])
 
   const totalQuantity = items.reduce((acc, i) => acc + (i.qty || 0), 0) // Soma de todas as unidades de todos os itens
-  const abaixoMinimo = items.filter(i => i.status === 'Comprar' || i.status === 'Atenção') // Filtra os itens que estão abaixo do mínimo (status "Comprar" ou "Atenção")
+  const abaixoMinimo = items.filter(i => i.qty <= i.minimum_qty) // Filtra os itens que estão abaixo do mínimo (status "Comprar" ou "Atenção")
   
   const emUso = 0 //Placeholder por enquanto (falta endpoint da API)
   const disponiveis = totalQuantity - emUso
@@ -151,8 +144,10 @@ export function DashboardView() {
                 <CardTitle className="text-base">Movimentações recentes</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1">
-                {movimentacoes.slice(0, 5).map((mov) => {
-                  const cfg = movTipoConfig[mov.action.toLowerCase() as MovimentacaoTipo] || movTipoConfig['retirada']
+                {[...movimentacoes].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 5)
+                  .map((mov) => {
+                  const cfg = movTipoConfig[mov.action.toLowerCase() as MovimentacaoTipo] || movTipoConfig['out']
                   const Icon = cfg.icon
                   return (
                     <div key={mov.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted">
@@ -162,7 +157,7 @@ export function DashboardView() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{mov.item_name}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {cfg.label} · {mov.quantity}x · {mov.user_name}
+                          {mov.reason_display} · {mov.quantity}x · {mov.user_name}
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
@@ -215,7 +210,19 @@ export function DashboardView() {
         </div>
 
         <div className="lg:col-span-1 bg-card rounded-xl border border-border p-6 shadow-sm w-full h-fit">
-          {activePanel === 'register' && <RegisterItemForm onSuccessSave={loadData} />}
+          {activePanel === 'register' ? (
+            <RegisterItemForm onSuccessSave={loadData} /> 
+          ) : (
+            
+            <ItemMovimentForm 
+               scannedItem={itemToMove} 
+               onSuccessSave={() => {
+                 loadData();
+                 setItemToMove(null);
+               }} 
+            />
+            
+          )}
         </div>
 
       </div>
