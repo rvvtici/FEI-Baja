@@ -65,7 +65,8 @@ export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFor
       console.log("Enviando Payload:", payload)
 
 
-      const resp = await fetch('http://localhost:8000/api/movimentacoes/', {
+      // const resp = await fetch('http://localhost:8000/api/movimentacoes/', {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/movimentacoes/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -102,7 +103,8 @@ export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFor
                 const codigoDigitado = e.currentTarget.value
                 if (!codigoDigitado) return
                 try {
-                  const resp = await fetch(`http://localhost:8000/api/itens/?code=${codigoDigitado}`)
+                  // const resp = await fetch(`http://localhost:8000/api/itens/?code=${codigoDigitado}`)
+                  const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/itens/?code=${codigoDigitado}`)
                   if (resp.ok) {
                     const dados = await resp.json()
                     if (dados.length > 0) setSelectedItem(dados[0])

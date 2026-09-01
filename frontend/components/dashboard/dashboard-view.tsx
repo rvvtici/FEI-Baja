@@ -62,8 +62,12 @@ export function DashboardView() {
 
       try {
         const [resItems, resMovimentacoes] = await Promise.all([
-          fetch('http://localhost:8000/api/itens/', { headers }),
-          fetch('http://localhost:8000/api/movimentacoes/', { headers }),
+          // fetch('http://localhost:8000/api/itens/', { headers }),
+          // fetch('http://localhost:8000/api/movimentacoes/', { headers }),
+          
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/itens/`, {headers}),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/movimentacoes/`, {headers}),
+
         ]);
 
         if (resItems.ok && resMovimentacoes.ok) {
@@ -245,7 +249,8 @@ const prefix = currentCategory?.next_code ? currentCategory.next_code : 'Ex: ELT
 // Carrega as categorias
 const fetchCategories = async () => {
     try { 
-      const resp = await fetch('http://localhost:8000/api/categorias/')
+      // const resp = await fetch('http://localhost:8000/api/categorias/')
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categorias/`)
       if (resp.ok) {
         const data = await resp.json()
         setCategories(data)
@@ -260,7 +265,8 @@ useEffect(() => {
 
 const SaveItem = async (data: NewItemFormData) => {
   try {
-    const resp = await fetch('http://localhost:8000/api/itens/', {
+    // const resp = await fetch('http://localhost:8000/api/itens/', {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/itens/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
