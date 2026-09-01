@@ -23,7 +23,7 @@ python3 manage.py runserver
 ``` 
 docker-compose up -d
 docker ps
-``
+```
 
 ## acesso admin
 http://127.0.0.1:8000/admin/
