@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react"
 // import { Card } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { StatCard } from "@/components/dashboard/stat-card"
+import { StatCard } from "@/components/ui/stat-card"
 import React from "react";
 import {
   Boxes,

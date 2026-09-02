@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react"
 // import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { StatCard } from "@/components/dashboard/stat-card"
+import { StatCard } from "@/components/ui/stat-card"
 import React from "react";
 import {
   Boxes,
@@ -36,7 +36,7 @@ import {
 
 
 
-export function FerramentasView() {
+export function OrcamentosView() {
 
   const [novoNome, setNovoNome] = useState("")
   const [novaQtd, setNovaQtd] = useState("1")
@@ -75,18 +75,22 @@ export function FerramentasView() {
   return (
     <div className="space-y-6">
 
+      <div className="flex flex-wrap gap-3">
+        <Button className="gap-2"><ArrowUpRight className="h-4 w-4" />Acessar anos anteriores</Button>
+        {/* <Button variant="outline" className="gap-2"><ArrowDownLeft className="h-4 w-4" />Devolver item</Button>
+        <Button variant="outline" className="gap-2"><Plus className="h-4 w-4" />Novo item</Button> */}
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Em uso / emprestados" value={3} hint="Fora da oficina agora" icon={Handshake} />
-        <StatCard label="Itens cadastrados" value={1} hint={`${3} unidades no total`} icon={Boxes} />
-        {/* <StatCard label="Disponíveis" value={2} hint="Prontos para uso" icon={CheckCircle2} tone="success" /> */}
-    </div>
+        <StatCard label="Orçamento restante" value={2000.0} icon={PiggyBank} />
+        <StatCard label="Itens cadastrados em 2026" value={0} hint={`0 unidades no total`} icon={Boxes} />
+      </div>
 
 
 
       <div className="flex flex-row gap-4">
-        <div className="bg-card rounded-xl border border-border p-6shadow-sm flex-[2]">
-          <h3 className="text-xl text-center font-semibold my-4">Ferramentas</h3>
+        <div className="bg-card rounded-xl border border-border p-6 shadow-sm flex-[2]">
+          <h3 className="text-xl text-center font-semibold mb-4">Itens registrados em 2026</h3>
               
             <span className="flex flex-row">
               <Input
@@ -149,77 +153,73 @@ export function FerramentasView() {
 
 
 
-    <div className="rounded-xl border  shadow-sm w-full flex-1">
-        {/* <div className="lg:col-span-2 grid grid-cols-1 xl:grid-cols-2 gap-6 items-start"> */}
-          {/* CARD de Movimentações */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Movimentações recentes de ferramentas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              {/* Retornamos o .slice(0, 5) para mostrar só as 5 últimas */}
-              {/* {movimentacoes.slice(0, 5).map((mov) => {
-                const cfg = movTipoConfig[mov.action.toLowerCase() as MovimentacaoTipo] || movTipoConfig['retirada']
-                const Icon = cfg.icon
-                return (
-                  <div key={mov.id} className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted">
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${cfg.className}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{mov.item_name}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {cfg.label} · {mov.quantity}x · {mov.user_name}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="font-mono text-xs text-muted-foreground">{mov.item_code}</p>
-                      <p className="text-xs text-muted-foreground">{formatHora(mov.date)}</p>
-                    </div>
-                  </div>
-                )
-              })} */}
-            </CardContent>
-          </Card>
-
-          {/* CARD de Reposições */}
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <AlertTriangle className="h-4 w-4 text-warning" />
-                Reposições necessárias de ferramentas 
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Adicionamos o .slice(0, 5) aqui também para o card não ficar gigante se faltar muita peça */}
-              {/* {abaixoMinimo.slice(0, 5).map((item) => (
-                <div key={item.id} className="rounded-lg border border-border p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium leading-snug">{item.name}</p>
-                    <Badge variant="outline" className="shrink-0 font-mono text-xs">
-                      {item.code}
-                    </Badge>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{item.category_name}</span>
-                    <span className="font-medium text-warning">
-                      {item.qty} de {item.minimum_qty} mín.
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-warning"
-                      style={{
-                        width: `${Math.min(100, (item.qty / item.minimum_qty) * 100)}%`,
+            <div className="bg-card rounded-xl border border-border p-6 shadow-sm w-full flex-1">
+                <h3 className="text-lg font-semibold mb-4">Registrar Novo Item</h3>
+                {/* <RegisterItemForm onSuccessSave={loadData} />  */}
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <label htmlFor="novo-item" className="mb-1 block text-xs text-muted-foreground">
+                      Código do item
+                    </label>
+                    <Input
+                      id="novo-item"
+                      value={novoNome}
+                      onChange={(e) => setNovoNome(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) adicionarItem()
                       }}
+                      placeholder="Ex: EL001"
+                      className="h-9"
                     />
                   </div>
+
+
+                  <div className="w-16">
+                    <label htmlFor="nova-qtd" className="mb-1 block text-xs text-muted-foreground">
+                      Qtde
+                    </label>
+                    <Input
+                      id="nova-qtd"
+                      type="number"
+                      min={1}
+                      value={novaQtd}
+                      onChange={(e) => setNovaQtd(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) adicionarItem()
+                      }}
+                      className="h-9"
+                    />
+                  </div>
+
+
+                  <div className="w-16">
+                    <label htmlFor="nova-qtd" className="mb-1 block text-xs text-muted-foreground">
+                      Preço/unidade
+                    </label>
+                    <Input
+                      id="nova-qtd"
+                      type="number"
+                      min={1}
+                      value={novoPreco}
+                      onChange={(e) => setNovoPreco(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) adicionarItem()
+                      }}
+                      className="h-9"
+                    />
+                  </div>
+                  <Button type="button" size="icon" onClick={adicionarItem} className="h-9 w-9 shrink-0">
+                    <Plus className="h-4 w-4" />
+                    <span className="sr-only">Adicionar item</span>
+                  </Button>
                 </div>
-              ))} */}
-            </CardContent>
-          </Card>
-        </div>
-            {/* </div> */}
+
+                {/*arrumar essa parte para só ser exibida se tiver um código correspondente*/}
+                <div className="border rounded-lg my-2 p-4">
+                  <h3 className="text-sm font-medium">Nome correspondente ao item: </h3>
+                  <h3 className="text-sm font-medium">Categoria correspondente ao item: </h3>
+                </div>
+            </div>
 
 
         </div>

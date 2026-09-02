@@ -19,7 +19,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { StatCard } from "@/components/dashboard/stat-card"
+import { StatCard } from "@/components/ui/stat-card"
 import { categoriaLabels, type MovimentacaoTipo } from "@/lib/mock-data"
 import { InventoryTable } from "./inventory-table"
 import {ItemMovimentForm} from './item-movimentation-card'
