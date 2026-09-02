@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
-import Barcode from "react-barcode"
+import QRCode from "react-qr-code"
 import { Minus, Plus, Check } from "lucide-react"
 import { Item } from "@/components/types/types"
 
@@ -143,9 +143,17 @@ export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFor
           <div className="flex items-center gap-5 p-4 border border-border rounded-xl bg-card shadow-sm">
            
             {/* BARCODE */}
-            <div className="bg-white p-2 rounded-md border flex-shrink-0 flex flex-col items-center">
-              <Barcode value={selectedItem.code} width={1.2} height={35} displayValue={false} margin={0} background="#ffffff" lineColor="#000000" />
-              <span className="text-[10px] font-mono font-bold text-black mt-1.5 tracking-widest">{selectedItem.code}</span>
+            <div className="bg-white p-2 rounded-xl border flex-shrink-0 flex flex-col items-center justify-center">
+              <QRCode 
+                value={`${process.env.NEXT_PUBLIC_API_URL}/?code=${selectedItem.code}`} 
+                size={56} 
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="L" 
+              />
+              <span className="text-[10px] font-mono font-bold text-black mt-1.5 tracking-widest">
+                {selectedItem.code}
+              </span>
             </div>
 
             <div className="flex- grid grid-cols-2 gap-y-3 gap-x-4">
