@@ -5,45 +5,29 @@ import dynamic from 'next/dynamic';
 import { GeistSans } from "geist/font/sans";
 import type { IDetectedBarcode, IScannerHandle } from '@yudiel/react-qr-scanner';
 import { useDevices } from '@yudiel/react-qr-scanner';
-import { inter } from '@/app/fonts';
 import Image from 'next/image';
-import { Input } from "@/components/ui/input"
-import { Underline } from 'lucide-react';
-import { Button } from "@/components/ui/button"
-import {
-  Boxes,
-  CheckCircle2,
-  Handshake,
-  TrendingDown,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Plus,
-  AlertTriangle,
-  Minus
-} from "lucide-react"
+import { Loader2 } from 'lucide-react';
 
-// Server-Side Rendering (SSR): This library requires browser APIs and will not work during SSR.
-// Ensure you only import and use it in client-side code:
+import { ItemMovimentForm } from "@/components/dashboards/principal/item-movimentation-card"
+import { Item } from "@/components/types/types"
+
 const Scanner = dynamic(
   () => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
   { ssr: false }
 );
 
-// escolhe a câmera traseira principal (1x), evitando ultra-wide/macro
 function useBestBackCamera(): string | undefined {
-  const devices = useDevices(); // MediaDeviceInfo[]
+  const devices = useDevices();
   const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!devices || devices.length === 0) return;
 
     const isBack = (label: string) => /back|traseira|rear/i.test(label);
-    const isUltraWideOrMacro = (label: string) =>
-      /ultra ?wide|0\.5|macro|wide angle/i.test(label);
+    const isUltraWideOrMacro = (label: string) => /ultra ?wide|0\.5|macro|wide angle/i.test(label);
 
     const backCameras = devices.filter((d) => isBack(d.label));
-    const mainBackCamera =
-      backCameras.find((d) => !isUltraWideOrMacro(d.label)) ?? backCameras[0];
+    const mainBackCamera = backCameras.find((d) => !isUltraWideOrMacro(d.label)) ?? backCameras[0];
 
     if (mainBackCamera) {
       setDeviceId(mainBackCamera.deviceId);
@@ -54,227 +38,155 @@ function useBestBackCamera(): string | undefined {
 }
 
 export default function Home() {
+  const [isScanning, setIsScanning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [scannedItem, setScannedItem] = useState<Item | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-const [isScanning, setIsScanning] = useState(false);
-const [code, setCode] = useState<string | null>(null);
-const [error, setError] = useState<string | null>(null);
-const [botaoAdicionar, setBotaoAdicionar] = useState(false);
-const [botaoRemover, setBotaoRemover] = useState(false);
-const [quantidadeDisponivel, setQuantidadeDisponivel] = useState(10);
-const [quantidadeAdicaoRemocao, setQuantidadeAdicaoRemocao] = useState(0);
-const [observacoes, setObservacoes] = useState("");
-const quantidadeSoma = quantidadeDisponivel + quantidadeAdicaoRemocao;
-const quantidadeSub = quantidadeDisponivel - quantidadeAdicaoRemocao;
+  const scannerRef = useRef<IScannerHandle>(null);
+  const deviceId = useBestBackCamera();
 
+  const handleScan = async (detectedCodes: IDetectedBarcode[]) => {
+    if (detectedCodes.length > 0) {
+      const rawCode = detectedCodes[0].rawValue;
+      setIsScanning(false);
+      setIsLoading(true);
+      setError(null);
 
-const scannerRef = useRef<IScannerHandle>(null);
-const deviceId = useBestBackCamera();
-
-const handleScan = (detectedCodes: IDetectedBarcode[]) => {
-if (detectedCodes.length > 0) {
-setCode(detectedCodes[0].rawValue);
-setIsScanning(false); // fecha a câmera após ler
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const resp = await fetch(`${apiUrl}/api/itens/?code=${rawCode}`);
+        
+        if (resp.ok) {
+          const dados = await resp.json();
+          const pecaExata = dados.find((item: Item) => item.code === rawCode);
+          
+          if (pecaExata) {
+            setScannedItem(pecaExata); 
+          } else {
+            setError(`O código "${rawCode}" não está registrado no sistema.`);
+          }
+        } else {
+          setError("Erro de comunicação com o servidor.");
+        }
+      } catch (err) {
+        setError("Erro de rede. Verifique sua conexão ou IP.");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-return (
-<main className={`${GeistSans.className} antialiased flex min-h-screen flex-col
-     items-center justify-center bg-black/95 text-white`}>
-<a href="/dashboard" className="underline">dashboard</a>
-<Image
-src="/fei-baja.png"
-width={100}
-height={100}
-className="block p-[1px]"
-alt="Logo FEI Baja"
-loading="eager"
-/>
+  const resetScanner = () => {
+    setScannedItem(null);
+    setError(null);
+    setIsScanning(true);
+  };
 
-<h1 className="text-center text-2xl font-bold">
-        Estoque: FEI Baja
-</h1>
-
-<p className="text-center text-xs">
-        Scanner de Código de Barras / QR Code
-</p>
-
-
-{/* qnd nao tiver a camera aberta, o botao de escanear aparece */}
-{!isScanning && ( 
-<button
-onClick={() => {
-setCode(null);
-setError(null);
-setIsScanning(true);
-          }}
-className="rounded-xs bg-white text-black p-[5px] m-1 text-sm transition hover:bg-black hover:text-white"
->
-          Abrir câmera e escanear
-</button>
-      )}
-
-{/* camera aberta */}
-{isScanning && (
-<div className="w-full max-w-[400px]">
-<Scanner
-ref={scannerRef}
-onScan={handleScan}
-components={{
-torch: true, // Show torch/flashlight button (if supported)
-zoom: true, // Show zoom control (if supported)
-            }}
-onError={(err) => setError(String(err))}
-constraints={
-              deviceId
-                ? { deviceId: { exact: deviceId } } // força a lente 1x especificamente
-                : { facingMode: 'environment' } // fallback enquanto detecta as devices
-            }
-/>
-<button
-onClick={() => setIsScanning(false)}
-className="mt-2 w-full rounded-lg border border-gray-300 bg-white text-black hover:bg-black hover:text-white px-4 py-2 transition"
->
-    Cancelar
-</button>
-</div>
-      )}
-
-
-
-{/* display caso dê erro */}
-{error && (
-  <div className="mt-2 w-full max-w-[400px] rounded-lg bg-zinc-100 py-2 text-center text-green-800">
-    <span className="font-semibold">Erro:</span>
-    <p className="mt-1 break-all">{error}</p>
-   </div>
-)}
-
-
-{/* display caso dê erro */}
-{code && (
-  <div>
-    <div className="mt-2 w-full max-w-[400px] rounded-lg bg-red-100 px-40 py-2 text-center text-red-700">
-      <span className="font-semibold">Código lido:</span>
-      <p className="mt-1 break-all">{code}</p>
-    </div>
-    
-
-    {/* informacoes do item */}
-    <div className="mt-2 gap-2">
-      {/* espeecificacoes item */}
-      <div className="flex flex-col justify-center items-left p-2 rounded-lg text-black bg-zinc-300">
-        <div className="flex flex-row gap-[1px]">
-          <p className="font-bold">Código:</p><span/><p>teste</p>
-        </div>
-        
-        <div className="flex flex-row gap-[1px]">
-          <p className="font-bold">Nome:</p><span/><p>Fusível 10A</p>
-        </div>
-        
-        <div className="flex flex-row gap-[1px]">
-          <p className="font-bold">Categoria:</p><span/><p>Elétrica</p>
-        </div>
-        
-        <div className="flex flex-row gap-[1px]">
-          <p className="font-bold">Disponível:</p><span/><p>10</p>
-        </div>
-        
+  return (
+    <main className={`${GeistSans.className} antialiased flex min-h-screen flex-col items-center p-4 bg-black/95 text-white overflow-y-auto`}>
+      
+      <div className="w-full max-w-[400px] flex flex-col items-center mt-6 mb-8">
+        <Image
+          src="/fei-baja.png"
+          width={80}
+          height={80}
+          className="block mb-4"
+          alt="Logo FEI Baja"
+          loading="eager"
+        />
+        <h1 className="text-xl font-bold text-center">Estoque: FEI Baja</h1>
+        <p className="text-xs text-muted-foreground text-center mt-1">
+          Scanner Móvel de Peças
+        </p>
+        <a href="/dashboard" className="text-sm text-[#254EDb] underline mt-4 hover:text-white transition-colors">
+          Acessar Painel Web
+        </a>
       </div>
-        {/* if categoria = ferramenta: emprestar/devolver */}
-        {/* else */}
+
+      <div className="w-full max-w-[400px] flex-1 flex flex-col justify-start items-center">
         
-        <div className="flex flex-col mb-16">
+        {!isScanning && !scannedItem && !isLoading && !error && (
+          <button
+            onClick={resetScanner}
+            className="w-full rounded-xl bg-white text-black p-4 font-semibold transition hover:bg-zinc-200 shadow-sm"
+          >
+            Abrir câmera e escanear
+          </button>
+        )}
 
 
-        {/* botoes */}
-          <div className="">
-            <Button onClick={() => {
-                setBotaoAdicionar((prev) => !prev);
-                setBotaoRemover(false); 
-                setQuantidadeAdicaoRemocao(0);
-              }} 
-                className={`gap-2 p-9 text-white m-1 ${
-                botaoAdicionar ? "bg-green-500" : "bg-green-800"
-              }`}
-              // className="gap-2 text-white bg-green-800"
-              >
-              <Plus className="h-4 w-4 text-white"/>
-              Adicionar item
-            </Button>
+       {isScanning && (
+          <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-zinc-800 bg-black relative">
+            
+            <div className="absolute top-4 left-0 right-0 z-10 flex justify-center pointer-events-none">
+              <span className="bg-black/70 text-white px-4 py-1.5 rounded-full text-xs font-medium animate-pulse backdrop-blur-sm">
+                Aguardando foco no código...
+              </span>
+            </div>
 
-            <Button 
-            onClick={() => {
-                setBotaoRemover((prev) => !prev);
-                setBotaoAdicionar(false); 
-                setQuantidadeAdicaoRemocao(0);
-              }} 
-            className={`gap-2 p-9 text-white ${
-              botaoRemover ? "bg-red-500" : "bg-red-800"
-            }`}           
+            <Scanner
+              ref={scannerRef}
+              onScan={handleScan}
+              formats={['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8']}
+              components={{ torch: true, zoom: true }}
+              onError={(err) => setError(String(err))}
+              constraints={
+                deviceId
+                  ? { deviceId: { exact: deviceId } }
+                  : { facingMode: 'environment' } 
+              }
+            />
+            <button
+              onClick={() => setIsScanning(false)}
+              className="w-full border-t border-zinc-800 bg-zinc-900 text-white p-4 font-medium hover:bg-zinc-800 transition"
             >
-            <Minus className="h-4 w-4 text-white" />
-            Remover item
-            </Button>
+              Cancelar
+            </button>
           </div>
-        
-          {(botaoAdicionar || botaoRemover) && (
-            <div className="flex flex-col">
+        )}
 
-        <div className="flex flex-row"> 
-
-            <p>Quantidade*:</p>
-            {/* // nao permitir a qtde do input abaixo ser maior q a disponivel */}
-            <Input
-              id="adicionar-remover-item"
-              type="number"
-              value={quantidadeAdicaoRemocao}
-              onChange={(e) => setQuantidadeAdicaoRemocao(Number(e.target.value))}
-              // placeholder="Quantidade*:"
-              className="h-7 mx-2 border-zinc-500"
-              />
-
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center p-8 gap-4 text-zinc-400">
+            <Loader2 className="w-8 h-8 animate-spin text-[#254EDb]" />
+            <p className="text-sm">Buscando peça no sistema...</p>
           </div>
-          
-        <div className="flex flex-row">
-            <p>Observações:</p>
-            <Input
-              id="observacoes-adicao-remover-item"
-              type="number"
-              // value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              // placeholder="Quantidade*:"
-              className="h-7 mx-2 border-zinc-500"
+        )}
+
+        {error && (
+          <div className="w-full bg-red-950/50 border border-red-900 rounded-xl p-5 text-center flex flex-col gap-4">
+            <div>
+              <span className="font-bold text-red-500 block mb-1">Atenção</span>
+              <p className="text-sm text-red-200">{error}</p>
+            </div>
+            <button
+              onClick={resetScanner}
+              className="bg-red-900 hover:bg-red-800 text-white p-3 rounded-lg text-sm font-semibold transition-colors"
+            >
+              Escanear Novamente
+            </button>
+          </div>
+        )}
+
+        {scannedItem && (
+          <div className="w-full bg-background rounded-2xl border border-border overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4">
+            <div className="p-4">
+              <ItemMovimentForm 
+                scannedItem={scannedItem} 
+                onSuccessSave={() => setScannedItem(null)} 
               />
             </div>
-            </div>
+            
+            <button
+              onClick={resetScanner}
+              className="w-full border-t border-border bg-muted/30 text-muted-foreground p-4 text-sm font-medium hover:bg-muted/50 transition-colors"
+            >
+              Cancelar e ler outro código
+            </button>
+          </div>
+        )}
+      </div>
 
-          ) 
-          }
-
-
-{/* configurar aqui conexao c/ backend */}
-          {botaoAdicionar && (
-              <div className="flex justify-center items-center flex-col">
-                <p>Nova quantidade: {quantidadeSoma}</p>
-                <Button className="px-30">Confirmar</Button>
-              </div>
-            )
-          }
-
-          {botaoRemover && (
-              <div className="flex justify-center items-center flex-col">
-                <p>Nova quantidade: {quantidadeSub}</p>
-                <Button className="px-30">Confirmar</Button>
-              </div>
-            )
-          }
-
-        
-
-        </div>
-    </div>
-  </div>
-      )}
-</main>
+    </main>
   );
 }
