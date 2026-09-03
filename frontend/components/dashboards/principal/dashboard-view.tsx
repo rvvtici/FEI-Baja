@@ -23,6 +23,7 @@ import { StatCard } from "@/components/ui/stat-card"
 import { categoriaLabels, type MovimentacaoTipo } from "@/lib/mock-data"
 import { InventoryTable } from "./inventory-table"
 import {ItemMovimentForm} from './item-movimentation-card'
+import { QRCode } from "react-qr-code"
 
 type ItemDashboard = Pick<Item, "id" | "name"  | "code" | "status" | "qty" | "minimum_qty" | "category_name">
 type NewItemFormData = Omit<Item, "id" | "status" | "barcode" | "category_name">
@@ -421,8 +422,8 @@ const SaveItem = async (data: NewItemFormData) => {
       </div>
 
       <div className="flex flex-col items-center opacity-50 pointer-events-none mt-4">
-        <p className="text-sm">O Barcode único será gerado ao salvar:</p>
-        <Barcode value="GERANDO..." width={1.5} height={40} displayValue={false} />
+        <p className="text-sm">O QRCode  será gerado ao salvar:</p>
+        <QRCode value="GERANDO..." size={100} />
       </div>
 
       <button type="submit" className="bg-green-600 text-white p-2">
