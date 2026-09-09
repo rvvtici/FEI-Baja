@@ -15,22 +15,22 @@ export default function Login() {
 const [user, setUser] = useState("");
 const [senha, setSenha] = useState("");
 
-const logar = async () => {
+// const logar = async () => {
 
 
-const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login/`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ username, password }),
-});
-const data = await res.json();
-// guardar data.access e data.refresh
-}
+// const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login/`, {
+//   method: 'POST',
+//   headers: { 'Content-Type': 'application/json' },
+//   body: JSON.stringify({ username, password }),
+// });
+// const data = await res.json();
+// // guardar data.access e data.refresh
+// }
 
-useEffect(() => {
-  logar()
+// useEffect(() => {
+//   logar()
   
-}
+// }
 
 return (
   <main className={`${GeistSans.className} antialiased flex min-h-screen flex-col
@@ -96,7 +96,8 @@ return (
 
 
       {/* <div className="flex-1"> */}
-      <Button type="button" size="icon" onClick={logar} 
+      {/* <Button type="button" size="icon" onClick={logar}  */}
+      <Button type="button" size="icon"
       className= "h-8 w-full min-w-0 rounder-lg px-2.5 py-1 text-base hover:cursor-pointer" 
         // "h-8 w-full min-w-0 rounded-lg border border-input px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
       >
