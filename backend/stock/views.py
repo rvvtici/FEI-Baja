@@ -2,34 +2,14 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
-from .models import Item, ItemMovement, Category, User, Pessoa
+from .models import Item, ItemMovement, Category, User
 from .serializers import ItemSerializer, ItemMovementSerializer, CategorySerializer
+from django.contrib.auth import authenticate
+from rest_framework.views import APIView
+
 
 # Create your views here.
 
-def view_ferramentas(request):
-    # teste = "oi"
-    # return render (request, 'produtos.html', {"teste":teste}) #(requisicao do usuario, caminho p url, context)
-    # return render (request, '.../frontend/app/page.tsx', {"teste":teste}) #(requisicao do usuario, caminho p url, context)
-    if request.method == "GET":
-        nome = 'ravi'
-
-
-        return render(request, 'produtos.html', {"nome":nome})
-    elif request.method == "POST":
-        nome=request.POST.get('nome')
-        idade=request.POST.get('idade')
-
-        pessoa = Pessoa(nome=nome, idade=idade) #from models
-        
-        pessoas = Pessoa.objects.filter(nome=nome)
-        if pessoas.exists():
-            return HttpResponse("user já cadastrado")
-        else:
-            pessoa.save()
-        
-
-        return HttpResponse(pessoas)
 
 #AllowAny somente para teste, depois mudar para IsAuthenticated/IsAdminUser
 class ItemViewSet(viewsets.ModelViewSet):
@@ -61,3 +41,23 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
 
     permission_classes = [AllowAny]
+
+
+class LoginView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = authenticate(
+            username=serializer.validated_data['username'],
+            password=serializer.validated_data['password']
+        )
+        
+        if user is None:
+            return Response({"detail": "Credenciais inválidas"}, status=401)
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        })

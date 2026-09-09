@@ -6,15 +6,6 @@ from django.db.models.fields import CharField
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
-class Pessoa(models.Model):
-    nome = models.CharField(max_length=50)
-    idade = models.IntegerField()
-
-    def __str__(self) -> str:
-        return self.nome
-
-        #python3 manage.py migrate -> rodar models p/ banco de dados
-        # area admin
 
 class Category(models.Model):
     name = models.CharField(max_length=50)

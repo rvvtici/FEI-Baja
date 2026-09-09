@@ -68,3 +68,7 @@ class CategorySerializer(serializers.ModelSerializer):
                 return None
         else:
             return f"{obj.code_prefix}001"
+
+class LoginSerializer (serializers.ModelSerializer):
+    username = serializer.CharField()
+    password = serializer.CharField(write_only=True)
