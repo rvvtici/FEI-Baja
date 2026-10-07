@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Item, Category, ItemMovement, User
+from django.contrib.auth import get_user_model
+from .models import Item, Category, ItemMovement
 
 class ItemSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
@@ -68,7 +69,3 @@ class CategorySerializer(serializers.ModelSerializer):
                 return None
         else:
             return f"{obj.code_prefix}001"
-
-class LoginSerializer (serializers.ModelSerializer):
-    username = serializer.CharField()
-    password = serializer.CharField(write_only=True)

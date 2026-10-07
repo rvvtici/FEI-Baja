@@ -2,12 +2,8 @@ from django.urls import include, path
 from . import views
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import ItemViewSet, ItemMovementViewSet, LoginView
+from .views import ItemViewSet, ItemMovementViewSet
 from django.contrib import admin
-
-urlpatterns = [
-    path('api/login/', LoginView.as_view()),
-]
 
 # servidor -> processa requisicoes e retorna uma response
 # cliente -> request ao server
@@ -25,7 +21,7 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # path('admin/', admin.site.urls)
-    path('api/login', LoginView.as_view())
+
     
 
 ]

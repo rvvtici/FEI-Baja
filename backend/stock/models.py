@@ -4,8 +4,7 @@ from django.db import models
 from django.db.models import F, Case, When, Value, CharField
 from django.db.models.fields import CharField
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
-
+from django.conf import settings
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -106,7 +105,7 @@ class ItemMovement(models.Model):
         MAINTENANCE = 'MAINTENANCE', 'Manutenção'
 
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     action = models.CharField(max_length=3, choices=ActionTypes.choices)
     reason = models.CharField(max_length=20, choices=Reasons.choices, default=Reasons.USAGE)
     quantity = models.IntegerField()
