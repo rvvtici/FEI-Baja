@@ -439,9 +439,9 @@ const SaveItem = async (data: NewItemFormData) => {
         <QRCode value="GERANDO..." size={100} />
       </div>
 
-      <button type="submit" className="bg-green-600 text-white p-2">
-        Salvar Item
-      </button>
+      <Button type="submit" isLoading={isSubmitting} className="w-full bg-green-600 text-white hover:bg-green-700">
+        {isSubmitting ? 'A guardar item...' : 'Salvar Item'}
+      </Button>
     </form>
   )
 }
