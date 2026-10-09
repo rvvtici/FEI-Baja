@@ -97,10 +97,10 @@ export default function Home() {
         />
         <h1 className="text-xl font-bold text-center">Estoque: FEI Baja</h1>
         <p className="text-xs text-muted-foreground text-center mt-1">
-          Scanner Móvel de Peças
+          Scanner Peças
         </p>
         <a href="/dashboard" className="text-sm text-[#254EDb] underline mt-4 hover:text-white transition-colors">
-          Acessar Painel Web
+          Acessar Dashboard
         </a>
       </div>
 

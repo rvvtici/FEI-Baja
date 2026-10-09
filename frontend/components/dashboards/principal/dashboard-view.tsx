@@ -238,7 +238,7 @@ export function DashboardView() {
 
 // Função para registro de itens
 export function RegisterItemForm({onSuccessSave}: {onSuccessSave: () => void}){
-const { register, handleSubmit, reset,  watch } = useForm<NewItemFormData>()
+const { register, handleSubmit, reset,  watch, setError, formState: { errors, isSubmitting } } = useForm<NewItemFormData>()
 const [CreatedItem, setCreatedItem] = useState<Item | null>(null)
 const [categories, setCategories] = useState<{ id: number; name: string; next_code: string; }[]>([])
 const selectedCategoryId = watch('category')
@@ -311,16 +311,19 @@ const SaveItem = async (data: NewItemFormData) => {
   return (
     <form onSubmit={handleSubmit(SaveItem)} className="flex flex-col gap-4">
       <div className="space-y-4 text-left w-full">
+        {/* Nome do Item */}
         <div>
           <label className="text-sm font-medium text-muted-foreground">Nome do item</label>
           <input 
             type="text" 
-            {...register("name")} 
+            {...register("name", { required: "O nome do item é obrigatório"})} 
             placeholder="Ex: Fusível 10A" 
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
+          {errors.name && <p className="mt-1 text-xs text-red-500 font-medium">{errors.name.message}</p>}
         </div>
 
+        {/* Tipo de Item */}
         <div>
           <label className="text-sm font-medium text-muted-foreground">Tipo de Item</label>
           <select 
@@ -344,6 +347,7 @@ const SaveItem = async (data: NewItemFormData) => {
               placeholder="Ex: 10 x 10 x 10 cm"
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
+            {errors.dimensions && <p className="mt-1 text-xs text-red-500 font-medium">{errors.dimensions.message}</p>}
           </div>
         )}
 
@@ -358,6 +362,7 @@ const SaveItem = async (data: NewItemFormData) => {
               placeholder="Ex: Makita "
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
+            {errors.brand && <p className="mt-1 text-xs text-red-500 font-medium">{errors.brand.message}</p>}
           </div>
         )}
 
@@ -366,14 +371,16 @@ const SaveItem = async (data: NewItemFormData) => {
             <label className="text-sm font-medium text-muted-foreground">Vencimento</label>
             <input 
               type="date" 
-              {...register("brand", { 
+              {...register("expiration_date", { 
                 required: itemType === 'CONSUMABLE' ? "O vencimento é obrigatório para consumíveis" : false 
               })} 
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
+            {errors.expiration_date && <p className="mt-1 text-xs text-red-500 font-medium">{errors.expiration_date.message}</p>}
           </div>
         )}
         
+        {/* Categoria */}
        <div>
           <label className="text-sm font-medium text-muted-foreground">Categoria</label>
           <select 
@@ -385,8 +392,10 @@ const SaveItem = async (data: NewItemFormData) => {
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
+          {errors.category && <p className="mt-1 text-xs text-red-500 font-medium">{errors.category.message}</p>}
         </div>
 
+        {/* Código do Item */}
         <div>
         <label className="text-sm font-medium text-muted-foreground">
           Código <span className="text-xs text-muted-foreground">(Gerado automaticamente se vazio)</span>
@@ -397,29 +406,33 @@ const SaveItem = async (data: NewItemFormData) => {
           placeholder={prefix}
           className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
+        {errors.code && <p className="mt-1 text-xs text-red-500 font-medium">{errors.code.message}</p>}
       </div>
         
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="text-sm font-medium text-muted-foreground">Estoque inicial </label>
-            <input 
-              type="number" 
-              {...register("qty")} 
-              placeholder="50" 
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="text-sm font-medium text-muted-foreground">Estoque mínimo</label>
-            <input 
-              type="number" 
-              {...register("minimum_qty")} 
-              placeholder="15" 
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-          </div>
+       {/* Qtd. em estoque */} 
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <label className="text-sm font-medium text-muted-foreground">Estoque inicial </label>
+          <input 
+            type="number" 
+            {...register("qty", { required: "Estoque obrigatório", min: { value: 0, message: "Mínimo é 0"} })} 
+            placeholder="50" 
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+          {errors.qty && <p className="mt-1 text-xs text-red-500 font-medium">{errors.qty.message}</p>}
+        </div>
+        <div className="flex-1">
+          <label className="text-sm font-medium text-muted-foreground">Estoque mínimo</label>
+          <input 
+            type="number" 
+            {...register("minimum_qty", { required: "Estoque obrigatório", min: {value: 1, message: "Mínimo é 1"}})} 
+            placeholder="15" 
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+          {errors.minimum_qty && <p className="mt-1 text-xs text-red-500 font-medium">{errors.minimum_qty.message}</p>}
         </div>
       </div>
+    </div>
 
       <div className="flex flex-col items-center opacity-50 pointer-events-none mt-4">
         <p className="text-sm">O QRCode  será gerado ao salvar:</p>
