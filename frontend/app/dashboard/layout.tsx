@@ -9,7 +9,7 @@ const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono'
 export const metadata: Metadata = {
   title: 'FEI-Baja · Gestão de Estoque',
   description: 'Sistema de gerenciamento de estoque, ferramentas e orçamento da oficina FEI-Baja',
-  generator: 'v0.app',
+  
   icons: {
     icon: [
       {

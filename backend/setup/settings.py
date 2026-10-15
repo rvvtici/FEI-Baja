@@ -14,6 +14,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import dj_database_url
+from datetime import timedelta
+
 
 load_dotenv()  # Carrega as variáveis de ambiente do .env
 
@@ -47,6 +49,7 @@ INSTALLED_APPS = [
     'stock.apps.StockConfig',
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist'
 ]
 
 MIDDLEWARE = [
@@ -141,7 +144,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'users.authentication.CookieJWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
 }
@@ -150,6 +153,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://feibaja.vercel.app"
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Internationalization
@@ -201,3 +206,14 @@ LOGGING = {
         },
     },
 }
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+}
+
+AUTHENTICATION_BACKENDS = [
+    "users.backends.EmailOrUsernameBackend",
+]

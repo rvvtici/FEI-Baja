@@ -11,7 +11,8 @@ import { LogsView } from "@/components/dashboards/logs/logs-view"
 import { PlaceholderView } from "@/components/dashboards/placeholder-view"
 import { Button } from "@/components/ui/button"
 import { navItems, type TabId } from "@/lib/navigation"
-
+import { logoutUser } from "@/utils/auth"
+import { useRouter } from "next/navigation"
 
 type SelectId = TabId
 
@@ -20,6 +21,18 @@ export default function Page() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const current = useMemo(() => navItems.find((n) => n.id === active)!, [active])
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser()
+      router.replace("/login")
+    } catch (e) {
+      console.error("Não foi possível sair:", e)
+      alert("Erro ao fazer logout. Tente novamente.")
+    }
+  }
+
   
   //alem dos itens principais tb pega as categorias
   // const current = navItems
@@ -63,6 +76,11 @@ export default function Page() {
                 <span className="hidden sm:inline">Escanear</span>
               </Button>
             </a>
+            <div>
+              <Button onClick={handleLogout}>
+                logout
+              </Button>
+            </div>
         </header>
 
         {/* Content */}

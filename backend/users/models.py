@@ -11,6 +11,6 @@ from .managers import CustomUserManager
 class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
     email = models.EmailField(unique=True)
-    REQUIRED_FIELDS = ['usernamegit add']
+    REQUIRED_FIELDS = ['username']
 
     objects = CustomUserManager()
