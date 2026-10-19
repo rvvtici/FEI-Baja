@@ -371,12 +371,12 @@ const SaveItem = async (data: NewItemFormData) => {
             <label className="text-sm font-medium text-muted-foreground">Vencimento</label>
             <input 
               type="date" 
-              {...register("expiration_date", { 
+              {...register("expiration", { 
                 required: itemType === 'CONSUMABLE' ? "O vencimento é obrigatório para consumíveis" : false 
               })} 
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
-            {errors.expiration_date && <p className="mt-1 text-xs text-red-500 font-medium">{errors.expiration_date.message}</p>}
+            {errors.expiration && <p className="mt-1 text-xs text-red-500 font-medium">{errors.expiration.message}</p>}
           </div>
         )}
         
