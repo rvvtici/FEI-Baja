@@ -51,7 +51,8 @@ class UserInfoView(RetrieveUpdateAPIView):
 
 class UserRegistrationView(CreateAPIView):
     serializer_class = RegisterUserSerializer
-
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
 
 class LoginView(APIView):
     permission_classes = (AllowAny,)
@@ -63,7 +64,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             refresh = RefreshToken.for_user(user)
-            access_token = _access_from_refresh(refresh)  # MUDOU
+            access_token = _access_from_refresh(refresh)  
 
             response = Response(
                 {"user": CustomUserSerializer(user).data},
@@ -94,7 +95,7 @@ class LogoutView(APIView):
         return response
 
 
-class CookieTokenRefreshView(APIView):  # MUDOU: herda de APIView
+class CookieTokenRefreshView(APIView):  
     permission_classes = (AllowAny,)
     authentication_classes = ()
 
@@ -104,8 +105,8 @@ class CookieTokenRefreshView(APIView):  # MUDOU: herda de APIView
             return Response({"error": "refresh token not provided"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             refresh = RefreshToken(refresh_token)
-            refresh.check_blacklist()                     # NOVO: o conserto principal
-            access_token = _access_from_refresh(refresh)  # MUDOU
+            refresh.check_blacklist()                     
+            access_token = _access_from_refresh(refresh)  
         except TokenError:
             return Response({"error": "invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
 
