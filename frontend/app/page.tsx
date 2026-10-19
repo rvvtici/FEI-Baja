@@ -11,6 +11,8 @@ import { Loader2 } from 'lucide-react';
 import { ItemMovimentForm } from "@/components/dashboards/principal/item-movimentation-card"
 import { Item } from "@/components/types/types"
 
+import { AuthGuard } from "@/components/auth-guard"
+
 const Scanner = dynamic(
   () => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
   { ssr: false }
@@ -84,6 +86,7 @@ export default function Home() {
   };
 
   return (
+    <AuthGuard>
     <main className={`${GeistSans.className} antialiased flex min-h-screen flex-col items-center p-4 bg-black/95 text-white overflow-y-auto`}>
       
       <div className="w-full max-w-[400px] flex flex-col items-center mt-6 mb-8">
@@ -188,5 +191,6 @@ export default function Home() {
       </div>
 
     </main>
+    </AuthGuard>
   );
 }

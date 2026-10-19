@@ -5,6 +5,9 @@ import { navItems, type TabId } from "@/lib/navigation"
 import { items, isBaixoEstoque } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
+import { useEffect, useState } from "react"
+import axios from "axios"
+
 import Image from 'next/image';
 
 
@@ -19,8 +22,21 @@ type AppSidebarProps = {
   onClose: () => void
 }
 
+type UserInfo = { id: number; email: string; username: string }
+
 export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps) {
   const baixoEstoque = items.filter(isBaixoEstoque)
+  const [user, setUser] = useState<UserInfo | null>(null)
+
+  useEffect(() => {
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/api/users/user-info/`, {
+        withCredentials: true,
+      })
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null))
+  }, [])
+
 
   return (
     <>
@@ -141,8 +157,8 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
               <User className="h-4.5 w-4.5 text-sidebar-foreground/80" />
             </div>
             <div className="min-w-0 flex-1 leading-tight">
-              <p className="truncate text-sm font-medium">Equipe FEI-Baja</p>
-              <p className="truncate text-xs text-sidebar-foreground/60">admin@feibaja.br</p>
+              <p className="truncate text-sm font-medium">{user?.username ?? "..."}</p>
+              <p className="truncate text-xs text-sidebar-foreground/60">{user?.email ?? ""}</p>
             </div>
             <button
               className="relative rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent"

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { navItems, type TabId } from "@/lib/navigation"
 import { logoutUser } from "@/utils/auth"
 import { useRouter } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 
 type SelectId = TabId
 
@@ -43,6 +44,7 @@ export default function Page() {
   // .find((item) => item.id === active)
 
   return (
+    <AuthGuard>
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         active={active}
@@ -103,5 +105,6 @@ export default function Page() {
         
       </div>
     </div>
+    </AuthGuard>
   )
 }

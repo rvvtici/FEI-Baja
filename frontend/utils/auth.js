@@ -1,7 +1,7 @@
 
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000/api/users/";
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/users/`;
 
 export const registerUser = async (email, username, password) => {
   try {

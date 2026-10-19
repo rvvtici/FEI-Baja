@@ -5,9 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-from rest_framework_simplejwt.views import TokenRefreshView
-
+from rest_framework_simplejwt.exceptions import TokenError
 
 from .serializers import (
     CustomUserSerializer,
@@ -28,6 +26,21 @@ def _cookie_kwargs():
     }
 
 
+# NOVO
+def _delete_cookie(response, name):
+    response.set_cookie(
+        name, "", max_age=0, expires="Thu, 01 Jan 1970 00:00:00 GMT",
+        **_cookie_kwargs(),
+    )
+
+
+# NOVO
+def _access_from_refresh(refresh):
+    access = refresh.access_token
+    access["refresh_jti"] = refresh["jti"]  # liga o access ao refresh
+    return str(access)
+
+
 class UserInfoView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CustomUserSerializer
@@ -42,7 +55,7 @@ class UserRegistrationView(CreateAPIView):
 
 class LoginView(APIView):
     permission_classes = (AllowAny,)
-    authentication_classes = ()  # evita checar cookie antigo/expirado no login
+    authentication_classes = ()
 
     def post(self, request):
         serializer = LoginUserSerializer(data=request.data, context={"request": request})
@@ -50,7 +63,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
+            access_token = _access_from_refresh(refresh)  # MUDOU
 
             response = Response(
                 {"user": CustomUserSerializer(user).data},
@@ -73,24 +86,26 @@ class LogoutView(APIView):
             try:
                 RefreshToken(refresh_token).blacklist()
             except TokenError:
-                pass  # token já inválido/expirado: segue e limpa os cookies
+                pass
 
         response = Response({"message": "successfully logged out"}, status=status.HTTP_200_OK)
-        samesite = _cookie_kwargs()["samesite"]
-        response.delete_cookie("access_token", path="/", samesite=samesite)
-        response.delete_cookie("refresh_token", path="/", samesite=samesite)
+        _delete_cookie(response, "access_token")   # MUDOU
+        _delete_cookie(response, "refresh_token")  # MUDOU
         return response
 
-class CookieTokenRefreshView(TokenRefreshView):
+
+class CookieTokenRefreshView(APIView):  # MUDOU: herda de APIView
+    permission_classes = (AllowAny,)
     authentication_classes = ()
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:
             return Response({"error": "refresh token not provided"}, status=status.HTTP_401_UNAUTHORIZED)
         try:
             refresh = RefreshToken(refresh_token)
-            access_token = str(refresh.access_token)
+            refresh.check_blacklist()                     # NOVO: o conserto principal
+            access_token = _access_from_refresh(refresh)  # MUDOU
         except TokenError:
             return Response({"error": "invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
 
