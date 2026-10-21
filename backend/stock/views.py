@@ -18,6 +18,10 @@ class ItemViewSet(viewsets.ModelViewSet):
         if status_filter:
             queryset = queryset.filter(status_count=status_filter)
 
+        code_filter = self.request.query_params.get('code', '').strip()
+        if code_filter:
+            queryset = queryset.filter(code__iexact=code_filter)
+
         return queryset
 
 

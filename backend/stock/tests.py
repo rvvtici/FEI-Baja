@@ -94,6 +94,17 @@ class AccessTests(TestCase):
 
         self.assertEqual(self.client.post("/api/users/logout/").status_code, 200)
 
+    def test_item_lookup_by_code(self):
+        self.client.force_authenticate(self.member)
+        Item.objects.create(item_type="MATERIAL", name="Tubo", category=self.category, dimensions="2x2")
+
+        for value in (self.item.code, self.item.code.lower(), f" {self.item.code} "):
+            with self.subTest(value=value):
+                resp = self.client.get("/api/itens/", {"code": value})
+                self.assertEqual([i["id"] for i in resp.json()], [self.item.pk])
+
+        self.assertEqual(self.client.get("/api/itens/", {"code": "NAOEXISTE"}).json(), [])
+
     def test_member_permissions(self):
         self.client.force_authenticate(self.member)
 
