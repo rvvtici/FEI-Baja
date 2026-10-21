@@ -1,16 +1,23 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
+from .models import CustomUser
+from .permissions import CanManageUsers
+from .roles import RoleChangeRefused, set_role
 from .serializers import (
     CustomUserSerializer,
     RegisterUserSerializer,
     LoginUserSerializer,
+    UserListSerializer,
+    UserRoleSerializer,
 )
 
 ACCESS_MAX_AGE = 60 * 5
@@ -95,7 +102,31 @@ class LogoutView(APIView):
         return response
 
 
-class CookieTokenRefreshView(APIView):  
+class UserListView(ListAPIView):
+    permission_classes = (IsAuthenticated, CanManageUsers)
+    serializer_class = UserListSerializer
+    queryset = CustomUser.objects.prefetch_related("groups").order_by("username")
+
+
+class UserRoleUpdateView(APIView):
+    permission_classes = (IsAuthenticated, CanManageUsers)
+
+    def patch(self, request, pk):
+        user = get_object_or_404(CustomUser, pk=pk)
+        serializer = UserRoleSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            set_role(user, serializer.validated_data["role"], acting_user=request.user)
+        except ValidationError as e:
+            return Response({"error": e.messages[0]}, status=status.HTTP_400_BAD_REQUEST)
+        except RoleChangeRefused as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+        return Response(UserListSerializer(user, context={"request": request}).data, status=status.HTTP_200_OK)
+
+
+class CookieTokenRefreshView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = ()
 

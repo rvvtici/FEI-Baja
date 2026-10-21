@@ -3,12 +3,45 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 from .models import CustomUser
+from .roles import ROLES
 
 
 class CustomUserSerializer(ModelSerializer):
+    role = serializers.CharField(read_only=True)
+    is_fixed_admin = serializers.BooleanField(source="is_superuser", read_only=True)
+    can_register_items = serializers.SerializerMethodField()
+    can_view_logs = serializers.SerializerMethodField()
+    can_manage_users = serializers.SerializerMethodField()
+
     class Meta:
         model = CustomUser
-        fields = ("id", "email", "username")
+        fields = (
+            "id", "email", "username", "role", "is_fixed_admin",
+            "can_register_items", "can_view_logs", "can_manage_users",
+        )
+
+    def get_can_register_items(self, obj):
+        return obj.has_perm("stock.add_item")
+
+    def get_can_view_logs(self, obj):
+        return obj.has_perm("stock.view_logs")
+
+    def get_can_manage_users(self, obj):
+        return obj.has_perm("users.manage_users")
+
+
+class UserListSerializer(CustomUserSerializer):
+    is_self = serializers.SerializerMethodField()
+
+    class Meta(CustomUserSerializer.Meta):
+        fields = CustomUserSerializer.Meta.fields + ("is_self",)
+
+    def get_is_self(self, obj):
+        return obj.pk == self.context["request"].user.pk
+
+
+class UserRoleSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=ROLES)
 
 
 class RegisterUserSerializer(ModelSerializer):
