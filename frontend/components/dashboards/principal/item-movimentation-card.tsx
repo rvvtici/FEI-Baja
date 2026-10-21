@@ -6,6 +6,7 @@ import QRCode from "react-qr-code"
 import { Minus, Plus, Check } from "lucide-react"
 import { Item } from "@/components/types/types"
 import { apiFetch } from "@/lib/api"
+import { findItemByCode, itemLookupPath, itemQrUrl, parseScannedCode, siteUrl } from "@/lib/item-code"
 import { NO_PERMISSION_MESSAGE } from "@/components/no-permission"
 import { useCurrentUser } from "@/components/auth-guard"
 
@@ -99,14 +100,16 @@ export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFor
             onKeyDown={async (e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
-                const codigoDigitado = e.currentTarget.value
+                const codigoDigitado = parseScannedCode(e.currentTarget.value)
                 if (!codigoDigitado) return
                 try {
-                  const resp = await apiFetch(`/api/itens/?code=${codigoDigitado}`)
+                  const resp = await apiFetch(itemLookupPath(codigoDigitado))
                   if (resp.ok) {
-                    const dados = await resp.json()
-                    if (dados.length > 0) setSelectedItem(dados[0])
+                    const peca = findItemByCode(await resp.json(), codigoDigitado)
+                    if (peca) setSelectedItem(peca)
                     else alert("Nenhuma peça encontrada com esse código.")
+                  } else {
+                    alert("Erro de comunicação com o servidor.")
                   }
                 } catch (error) {
                   console.error("Erro na busca:", error)
@@ -140,10 +143,10 @@ export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFor
           {/* CARD DE INFO */}
           <div className="flex items-center gap-5 p-4 border border-border rounded-xl bg-card shadow-sm">
            
-            {/* BARCODE */}
+            {/* QR CODE */}
             <div className="bg-white p-2 rounded-xl border flex-shrink-0 flex flex-col items-center justify-center">
               <QRCode 
-                value={`${process.env.NEXT_PUBLIC_API_URL}/?code=${selectedItem.code}`} 
+                value={itemQrUrl(selectedItem.code, siteUrl())}
                 size={56} 
                 bgColor="#ffffff"
                 fgColor="#000000"

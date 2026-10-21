@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { GeistSans } from "geist/font/sans";
 import type { IDetectedBarcode, IScannerHandle } from '@yudiel/react-qr-scanner';
@@ -13,6 +13,7 @@ import { Item } from "@/components/types/types"
 import { AuthGuard } from "@/components/auth-guard"
 import { useMainBackCamera } from "@/lib/camera"
 import { apiFetch } from "@/lib/api"
+import { ITEM_CODE_PARAM, findItemByCode, itemLookupPath, parseScannedCode } from "@/lib/item-code"
 
 const Scanner = dynamic(
   () => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
@@ -28,35 +29,49 @@ export default function Home() {
   const scannerRef = useRef<IScannerHandle>(null);
   const { deviceId, ready: cameraReady } = useMainBackCamera(isScanning);
 
-  const handleScan = async (detectedCodes: IDetectedBarcode[]) => {
-    if (detectedCodes.length > 0) {
-      const rawCode = detectedCodes[0].rawValue;
-      setIsScanning(false);
-      setIsLoading(true);
-      setError(null);
+  const lookupCode = async (rawCode: string) => {
+    const code = parseScannedCode(rawCode);
+    setIsScanning(false);
+    setError(null);
 
-      try {
-        const resp = await apiFetch(`/api/itens/?code=${rawCode}`);
-        
-        if (resp.ok) {
-          const dados = await resp.json();
-          const pecaExata = dados.find((item: Item) => item.code === rawCode);
-          
-          if (pecaExata) {
-            setScannedItem(pecaExata); 
-          } else {
-            setError(`O código "${rawCode}" não está registrado no sistema.`);
-          }
+    if (!code) {
+      setError("Código lido não é de uma peça do sistema.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const resp = await apiFetch(itemLookupPath(code));
+      // só limpa o ?code= depois de autenticado: se cair no login, ele precisa ir junto
+      if (resp.status !== 401) window.history.replaceState(null, "", window.location.pathname);
+
+      if (resp.ok) {
+        const pecaExata = findItemByCode(await resp.json(), code);
+
+        if (pecaExata) {
+          setScannedItem(pecaExata);
         } else {
-          setError("Erro de comunicação com o servidor.");
+          setError(`O código "${code}" não está registrado no sistema.`);
         }
-      } catch (err) {
-        setError("Erro de rede. Verifique sua conexão ou IP.");
-      } finally {
-        setIsLoading(false);
+      } else {
+        setError("Erro de comunicação com o servidor.");
       }
+    } catch (err) {
+      setError("Erro de rede. Verifique sua conexão ou IP.");
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleScan = (detectedCodes: IDetectedBarcode[]) => {
+    if (detectedCodes.length > 0) lookupCode(detectedCodes[0].rawValue);
+  };
+
+  // Já vai direto para a movimentação após leitura QR Code
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get(ITEM_CODE_PARAM);
+    if (code) lookupCode(code);
+  }, []);
 
   const resetScanner = () => {
     setScannedItem(null);

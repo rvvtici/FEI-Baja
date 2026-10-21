@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
-import Barcode from "react-barcode"
 import { Item, ItemMovement } from "@/components/types/types"
 import {
   Boxes,
@@ -25,6 +24,7 @@ import { InventoryTable } from "./inventory-table"
 import {ItemMovimentForm} from './item-movimentation-card'
 import { QRCode } from "react-qr-code"
 import { apiFetch } from "@/lib/api"
+import { itemQrUrl, siteUrl } from "@/lib/item-code"
 import { useCurrentUser } from "@/components/auth-guard"
 import { NO_PERMISSION_MESSAGE } from "@/components/no-permission"
 
@@ -289,9 +289,10 @@ const SaveItem = async (data: NewItemFormData) => {
       <div className="flex flex-col items-center p-6 text-center">
         <h2 className="text-green-500 font-bold text-xl">Peça Cadastrada com Sucesso!</h2>
         <p>O código único gerado pelo sistema foi:</p>
-        
-        <div className="mt-4 p-4 bg-white rounded shadow">
-            <Barcode value={CreatedItem.barcode} width={2} height={60} />
+
+        <div className="mt-4 p-4 bg-white rounded shadow flex flex-col items-center">
+            <QRCode value={itemQrUrl(CreatedItem.code, siteUrl())} size={140} />
+            <span className="mt-2 font-mono font-bold text-black tracking-widest">{CreatedItem.code}</span>
         </div>
 
         <button 
