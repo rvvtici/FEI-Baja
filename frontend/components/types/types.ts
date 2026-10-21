@@ -15,6 +15,17 @@ export interface Item {
     dimensions?: string;
 }
 
+export interface CurrentUser {
+    id: number;
+    email: string;
+    username: string;
+    role: 'Admin' | 'Membro';
+    is_fixed_admin: boolean;
+    can_register_items: boolean;
+    can_view_logs: boolean;
+    can_manage_users: boolean;
+}
+
 export interface ItemMovement {
     id: number;
     item: string;

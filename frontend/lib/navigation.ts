@@ -8,6 +8,7 @@ import {
   ScrollText,
   type LucideIcon,
 } from "lucide-react"
+import type { CurrentUser } from "@/components/types/types"
 
 export type TabId =
   | "dashboard"
@@ -37,6 +38,8 @@ export type NavItem = {
   label: string
   icon: LucideIcon
   descricao: string
+  // flag de /api/users/user-info/ exigida para ver a aba
+  requires?: "can_view_logs" | "can_register_items" | "can_manage_users"
   // categorias?: CategoriasEstoque[]
 }
 
@@ -52,5 +55,9 @@ export const navItems: NavItem[] = [
   { id: "orcamentos", label: "Orçamentos", icon: Wallet, descricao: "Gastos e verba anual" },
   { id: "competicao", label: "Competição", icon: Trophy, descricao: "Checklist para abril" },
   // { id: "estoque-visual", label: "Estoque Visual", icon: Boxes, descricao: "Parafusos, abraçadeiras (estimado)" },
-  { id: "logs", label: "Logs", icon: ScrollText, descricao: "Movimentações e auditoria" },
+  { id: "logs", label: "Logs", icon: ScrollText, descricao: "Movimentações e auditoria", requires: "can_view_logs" },
 ]
+
+export function canAccess(item: NavItem, user: CurrentUser): boolean {
+  return !item.requires || user[item.requires]
+}
