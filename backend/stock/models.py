@@ -112,6 +112,9 @@ class ItemMovement(models.Model):
     observations = models.TextField(blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        permissions = [("view_logs", "Pode ver os logs de movimentação")]
+
     def clean(self):
         if self.action == self.ActionTypes.OUT and self.quantity > self.item.qty:
             raise ValidationError("Não é possível realizar a retirada, pois a quantidade solicitada é maior do que a presente")
