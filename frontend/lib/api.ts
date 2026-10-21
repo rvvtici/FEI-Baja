@@ -15,10 +15,14 @@ function refreshSession(): Promise<boolean> {
   return refreshing
 }
 
+export const NEXT_PARAM = "next"
+
 export function redirectToLogin() {
   // recarregar a página zera todo o estado de autenticação em memória
   if (typeof window !== "undefined" && window.location.pathname !== LOGIN_ROUTE) {
-    window.location.replace(LOGIN_ROUTE)
+    // Guarda onde a pessoa estava (ex.: /?code=MO001 do QR) para voltar depois do login
+    const next = window.location.pathname + (window.location.search ?? "")
+    window.location.replace(next === "/" ? LOGIN_ROUTE : `${LOGIN_ROUTE}?${NEXT_PARAM}=${encodeURIComponent(next)}`)
   }
 }
 

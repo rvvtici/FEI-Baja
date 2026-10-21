@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { loginUser } from "../../utils/auth";
 import { getPostLoginRoute } from "@/lib/device";
+import { NEXT_PARAM } from "@/lib/api";
 import axios from 'axios';
 
 export default function Login() {
@@ -24,17 +25,20 @@ export default function Login() {
   const API = process.env.NEXT_PUBLIC_API_URL;
   const [verificando, setVerificando] = useState(true);
 
+  // ?next= vem do redirectToLogin (ex.: QR lido sem estar logado)
+  const destino = () => getPostLoginRoute(new URLSearchParams(window.location.search).get(NEXT_PARAM));
+
   useEffect(() => {
     const checar = async () => {
       try {
         await axios.get(`${API}/api/users/user-info/`, { withCredentials: true });
-        router.replace(getPostLoginRoute());   // já está logado
+        router.replace(destino());   // já está logado
       } catch (e: any) {
         if (e.response?.status === 401) {
           // access expirou: tenta renovar com o refresh
           try {
             await axios.post(`${API}/api/users/token/refresh/`, null, { withCredentials: true });
-            router.replace(getPostLoginRoute());
+            router.replace(destino());
             return;
           } catch {}
         }
@@ -69,7 +73,7 @@ export default function Login() {
     setCarregando(true);
     try {
       await loginUser(identifier.trim(), senha);
-      router.replace(getPostLoginRoute());
+      router.replace(destino());
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 400) {

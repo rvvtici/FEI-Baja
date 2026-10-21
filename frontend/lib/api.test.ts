@@ -8,9 +8,9 @@ function stubFetch(...statuses: number[]) {
   return fetchMock
 }
 
-function stubLocation(pathname = "/dashboard") {
+function stubLocation(pathname = "/dashboard", search = "") {
   const replace = vi.fn()
-  vi.stubGlobal("window", { location: { pathname, replace } })
+  vi.stubGlobal("window", { location: { pathname, search, replace } })
   return replace
 }
 
@@ -50,6 +50,24 @@ describe("apiFetch", () => {
     const resp = await apiFetch("/api/itens/")
 
     expect(resp.status).toBe(401)
+    expect(replace).toHaveBeenCalledWith("/login?next=%2Fdashboard")
+  })
+
+  it("leva o ?code= do QR junto para o login", async () => {
+    stubFetch(401, 401)
+    const replace = stubLocation("/", "?code=MO001")
+
+    await apiFetch("/api/itens/?code=MO001")
+
+    expect(replace).toHaveBeenCalledWith("/login?next=%2F%3Fcode%3DMO001")
+  })
+
+  it("na raiz sem parâmetros vai só para /login", async () => {
+    stubFetch(401, 401)
+    const replace = stubLocation("/")
+
+    await apiFetch("/api/itens/")
+
     expect(replace).toHaveBeenCalledWith("/login")
   })
 

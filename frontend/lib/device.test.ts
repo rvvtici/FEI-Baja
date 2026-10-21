@@ -74,4 +74,16 @@ describe("getPostLoginRoute", () => {
     stubDevice({ coarse: false, hoverNone: false, screen: [1920, 1080] })
     expect(getPostLoginRoute()).toBe(ROUTES.dashboard)
   })
+
+  it("volta para o ?next= interno (ex.: link do QR)", () => {
+    stubDevice({ coarse: false, hoverNone: false, screen: [1920, 1080] })
+    expect(getPostLoginRoute("/?code=MO001")).toBe("/?code=MO001")
+  })
+
+  it("ignora ?next= externo ou de volta para o login", () => {
+    stubDevice({ coarse: false, hoverNone: false, screen: [1920, 1080] })
+    for (const next of ["https://site.com", "//site.com", "/\\site.com", "/login", "", null]) {
+      expect(getPostLoginRoute(next)).toBe(ROUTES.dashboard)
+    }
+  })
 })

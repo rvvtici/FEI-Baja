@@ -27,6 +27,12 @@ export function isPortableDevice(): boolean {
   return touchPrimary && shortSide <= PORTABLE_MAX_SHORT_SIDE
 }
 
-export function getPostLoginRoute(): string {
+// Só caminhos internos: "//site.com" ou "/\site.com" levariam para outro domínio
+export function isSafeNext(next: string | null | undefined): next is string {
+  return !!next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") && !next.startsWith("/login")
+}
+
+export function getPostLoginRoute(next?: string | null): string {
+  if (isSafeNext(next)) return next
   return isPortableDevice() ? ROUTES.scanner : ROUTES.dashboard
 }
