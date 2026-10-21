@@ -1,15 +1,15 @@
-from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework import mixins, viewsets
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 
 from .models import Item, ItemMovement, Category
 from .serializers import ItemSerializer, ItemMovementSerializer, CategorySerializer
 
 
-# AllowAny somente para teste, depois mudar para IsAuthenticated/IsAdminUser
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
-    permission_classes = [AllowAny]
+    # Read livre para todos usuários, restante do CRUD exige Admin
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -21,17 +21,23 @@ class ItemViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class ItemMovementViewSet(viewsets.ModelViewSet):
+class ItemMovementViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
+):
+    # Movimentações devem ser IMUTÁVEIS, caso necessidade de alterar, criar uma nova movimentação no sentido oposto.
     queryset = ItemMovement.objects.all()
     serializer_class = ItemMovementSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
-    # Descomentar somente quando tokens estiverem funcionando normalmente
-    # def perform_create(self, serializer):
-    #     serializer.save(user=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [AllowAny]
+    # Read livre para todos usuários, restante do CRUD exige Admin
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]

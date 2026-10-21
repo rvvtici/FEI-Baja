@@ -48,8 +48,7 @@ class ItemMovementSerializer(serializers.ModelSerializer):
             'observations', 
             'date'
         ]
-
-    read_only_fields = ['user']
+        read_only_fields = ['user']  # definido no servidor a partir do usuário logado
 
 class CategorySerializer(serializers.ModelSerializer):
     next_code = serializers.SerializerMethodField()
