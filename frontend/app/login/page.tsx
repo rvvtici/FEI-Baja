@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { loginUser } from "../../utils/auth";
+import { getPostLoginRoute } from "@/lib/device";
 import axios from 'axios';
 
 export default function Login() {
@@ -27,13 +28,13 @@ export default function Login() {
     const checar = async () => {
       try {
         await axios.get(`${API}/api/users/user-info/`, { withCredentials: true });
-        router.replace("/dashboard");   // já está logado
+        router.replace(getPostLoginRoute());   // já está logado
       } catch (e: any) {
         if (e.response?.status === 401) {
           // access expirou: tenta renovar com o refresh
           try {
             await axios.post(`${API}/api/users/token/refresh/`, null, { withCredentials: true });
-            router.replace("/dashboard");
+            router.replace(getPostLoginRoute());
             return;
           } catch {}
         }
@@ -68,7 +69,7 @@ export default function Login() {
     setCarregando(true);
     try {
       await loginUser(identifier.trim(), senha);
-      router.replace("/dashboard");
+      router.replace(getPostLoginRoute());
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 400) {
