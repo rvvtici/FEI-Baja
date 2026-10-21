@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { GeistSans } from "geist/font/sans";
 import type { IDetectedBarcode, IScannerHandle } from '@yudiel/react-qr-scanner';
-import { useDevices } from '@yudiel/react-qr-scanner';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 
@@ -12,32 +11,12 @@ import { ItemMovimentForm } from "@/components/dashboards/principal/item-movimen
 import { Item } from "@/components/types/types"
 
 import { AuthGuard } from "@/components/auth-guard"
+import { useMainBackCamera } from "@/lib/camera"
 
 const Scanner = dynamic(
   () => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
   { ssr: false }
 );
-
-function useBestBackCamera(): string | undefined {
-  const devices = useDevices();
-  const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!devices || devices.length === 0) return;
-
-    const isBack = (label: string) => /back|traseira|rear/i.test(label);
-    const isUltraWideOrMacro = (label: string) => /ultra ?wide|0\.5|macro|wide angle/i.test(label);
-
-    const backCameras = devices.filter((d) => isBack(d.label));
-    const mainBackCamera = backCameras.find((d) => !isUltraWideOrMacro(d.label)) ?? backCameras[0];
-
-    if (mainBackCamera) {
-      setDeviceId(mainBackCamera.deviceId);
-    }
-  }, [devices]);
-
-  return deviceId;
-}
 
 export default function Home() {
   const [isScanning, setIsScanning] = useState(false);
@@ -46,7 +25,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const scannerRef = useRef<IScannerHandle>(null);
-  const deviceId = useBestBackCamera();
+  const { deviceId, ready: cameraReady } = useMainBackCamera(isScanning);
 
   const handleScan = async (detectedCodes: IDetectedBarcode[]) => {
     if (detectedCodes.length > 0) {
@@ -128,18 +107,24 @@ export default function Home() {
               </span>
             </div>
 
-            <Scanner
-              ref={scannerRef}
-              onScan={handleScan}
-              formats={['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8']}
-              components={{ torch: true, zoom: true }}
-              onError={(err) => setError(String(err))}
-              constraints={
-                deviceId
-                  ? { deviceId: { exact: deviceId } }
-                  : { facingMode: 'environment' } 
-              }
-            />
+            {cameraReady ? (
+              <Scanner
+                ref={scannerRef}
+                onScan={handleScan}
+                formats={['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8']}
+                components={{ torch: true, zoom: true }}
+                onError={(err) => setError(err.message)}
+                constraints={
+                  deviceId
+                    ? { deviceId: { exact: deviceId } }
+                    : { facingMode: 'environment' }
+                }
+              />
+            ) : (
+              <div className="flex aspect-square items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#254EDb]" />
+              </div>
+            )}
             <button
               onClick={() => setIsScanning(false)}
               className="w-full border-t border-zinc-800 bg-zinc-900 text-white p-4 font-medium hover:bg-zinc-800 transition"
