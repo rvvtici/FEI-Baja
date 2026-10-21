@@ -24,6 +24,9 @@ import { categoriaLabels, type MovimentacaoTipo } from "@/lib/mock-data"
 import { InventoryTable } from "./inventory-table"
 import {ItemMovimentForm} from './item-movimentation-card'
 import { QRCode } from "react-qr-code"
+import { apiFetch } from "@/lib/api"
+import { useCurrentUser } from "@/components/auth-guard"
+import { NO_PERMISSION_MESSAGE } from "@/components/no-permission"
 
 type ItemDashboard = Pick<Item, "id" | "name"  | "code" | "status" | "qty" | "minimum_qty" | "category_name">
 type NewItemFormData = Omit<Item, "id" | "status" | "barcode" | "category_name">
@@ -46,7 +49,8 @@ function formatHora(iso: string) {
 export function DashboardView() {
   const [items, setItems] = useState<ItemDashboard[]>([])
   const [movimentacoes, setMovimentacoes] = useState<ItemMovement[]>([])
-  const [activePanel, setActivePanel] = useState<'register' | 'movement'>('register')
+  const { can_register_items } = useCurrentUser()
+  const [activePanel, setActivePanel] = useState<'register' | 'movement'>(can_register_items ? 'register' : 'movement')
   const [itemToMove, setItemToMove] = useState<Item | null>(null)
 
   const handleSelectTableItem = (item: Item) => {
@@ -56,19 +60,10 @@ export function DashboardView() {
   }
 
   const loadData = async () => {
-      // const token = localStorage.getItem('access_token'); Somente para testes
-      // const headers = {'Authorization': `Bearer ${token}`}; Somente para testes
-
-      const headers = {};
-
       try {
         const [resItems, resMovimentacoes] = await Promise.all([
-          // fetch('http://localhost:8000/api/itens/', { headers }),
-          // fetch('http://localhost:8000/api/movimentacoes/', { headers }),
-          
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/itens/`, {headers}),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/movimentacoes/`, {headers}),
-
+          apiFetch('/api/itens/'),
+          apiFetch('/api/movimentacoes/'),
         ]);
 
         if (resItems.ok && resMovimentacoes.ok) {
@@ -108,13 +103,15 @@ export function DashboardView() {
           <ArrowDownLeft className="h-4 w-4" />Devolver item
         </Button>
         
-        <Button 
-          onClick={() => setActivePanel('register')} 
-          variant={activePanel === 'register' ? 'default' : 'outline'} 
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />Novo item
-        </Button>
+        {can_register_items && (
+          <Button 
+            onClick={() => setActivePanel('register')} 
+            variant={activePanel === 'register' ? 'default' : 'outline'} 
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />Novo item
+          </Button>
+        )}
       </div>
 
       {/* Métricas */}
@@ -215,7 +212,7 @@ export function DashboardView() {
         </div>
 
         <div className="lg:col-span-1 bg-card rounded-xl border border-border p-6 shadow-sm w-full h-fit">
-          {activePanel === 'register' ? (
+          {activePanel === 'register' && can_register_items ? (
             <RegisterItemForm onSuccessSave={loadData} /> 
           ) : (
             
@@ -240,6 +237,7 @@ export function DashboardView() {
 export function RegisterItemForm({onSuccessSave}: {onSuccessSave: () => void}){
 const { register, handleSubmit, reset,  watch, setError, formState: { errors, isSubmitting } } = useForm<NewItemFormData>()
 const [CreatedItem, setCreatedItem] = useState<Item | null>(null)
+const [saveError, setSaveError] = useState<string | null>(null)
 const [categories, setCategories] = useState<{ id: number; name: string; next_code: string; }[]>([])
 const selectedCategoryId = watch('category')
 const itemType = watch('item_type')
@@ -250,8 +248,7 @@ const prefix = currentCategory?.next_code ? currentCategory.next_code : 'Ex: ELT
 // Carrega as categorias
 const fetchCategories = async () => {
     try { 
-      // const resp = await fetch('http://localhost:8000/api/categorias/')
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categorias/`)
+      const resp = await apiFetch('/api/categorias/')
       if (resp.ok) {
         const data = await resp.json()
         setCategories(data)
@@ -265,17 +262,16 @@ useEffect(() => {
 }, [])
 
 const SaveItem = async (data: NewItemFormData) => {
+  setSaveError(null)
   try {
-    // const resp = await fetch('http://localhost:8000/api/itens/', {
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/itens/`, {
+    const resp = await apiFetch('/api/itens/', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(data), // Transforma tudo digitado em JSON
     })
 
-    if (resp.ok) {
+    if (resp.status === 403) {
+      setSaveError(NO_PERMISSION_MESSAGE)
+    } else if (resp.ok) {
       const newItem = await resp.json()
       setCreatedItem(newItem)
       onSuccessSave() //Atualiza imediatamente o dashboard
@@ -438,6 +434,8 @@ const SaveItem = async (data: NewItemFormData) => {
         <p className="text-sm">O QRCode  será gerado ao salvar:</p>
         <QRCode value="GERANDO..." size={100} />
       </div>
+
+      {saveError && <p className="text-center text-sm font-medium text-red-500">{saveError}</p>}
 
       <Button type="submit" isLoading={isSubmitting} className="w-full bg-green-600 text-white hover:bg-green-700">
         {isSubmitting ? 'A guardar item...' : 'Salvar Item'}

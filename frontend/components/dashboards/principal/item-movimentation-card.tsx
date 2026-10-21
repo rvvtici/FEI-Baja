@@ -5,13 +5,15 @@ import { useForm } from "react-hook-form"
 import QRCode from "react-qr-code"
 import { Minus, Plus, Check } from "lucide-react"
 import { Item } from "@/components/types/types"
+import { apiFetch } from "@/lib/api"
+import { NO_PERMISSION_MESSAGE } from "@/components/no-permission"
+import { useCurrentUser } from "@/components/auth-guard"
 
 interface ItemMovementDashboard {
   action: 'IN' | 'OUT';
   reason: string;
   quantity: number;
   observations: string;
-  user: string;
 }
 
 
@@ -22,6 +24,7 @@ interface ItemMovementFormProps {
 
 
 export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFormProps) {
+  const currentUser = useCurrentUser()
   const { register, handleSubmit, setValue, reset, watch } = useForm<ItemMovementDashboard>({
     defaultValues: {
       action: 'OUT',
@@ -53,27 +56,23 @@ export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFor
         reason: data.reason,
         quantity: Number(data.quantity),
         observations: data.observations || "",
-        item: selectedItem.id ,
-
-        //⚠️ ATENÇÃO: TEMPORÁRIO ⚠️
-        // O React não sabe quem está logado ainda. Forçamos um ID para o BD aceitar
-        // Quando JWT estiver funcionando com Login, substituir o '1' pelo ID do usuário logado
-        user: 1
+        item: selectedItem.id,
+        // o usuário é definido pelo backend a partir do login
       }
 
 
       console.log("Enviando Payload:", payload)
 
 
-      // const resp = await fetch('http://localhost:8000/api/movimentacoes/', {
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/movimentacoes/`, {
+      const resp = await apiFetch('/api/movimentacoes/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
 
-      if(resp.ok){
+      if (resp.status === 403) {
+        alert(NO_PERMISSION_MESSAGE)
+      } else if(resp.ok){
         reset()
         if (!scannedItem) setSelectedItem(null)
         onSuccessSave()
@@ -103,8 +102,7 @@ export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFor
                 const codigoDigitado = e.currentTarget.value
                 if (!codigoDigitado) return
                 try {
-                  // const resp = await fetch(`http://localhost:8000/api/itens/?code=${codigoDigitado}`)
-                  const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/itens/?code=${codigoDigitado}`)
+                  const resp = await apiFetch(`/api/itens/?code=${codigoDigitado}`)
                   if (resp.ok) {
                     const dados = await resp.json()
                     if (dados.length > 0) setSelectedItem(dados[0])
@@ -274,12 +272,13 @@ export function ItemMovimentForm({ scannedItem, onSuccessSave }: ItemMovementFor
             </div>
             <div className="space-y-1">
               <label className="text-sm font-semibold text-foreground">Responsável</label>
-              <select
-                {...register('user')}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-              >
-                <option value="current_user">Usuário Atual</option>
-              </select>
+              {/* definido pelo backend a partir do login */}
+              <input
+                type="text"
+                value={currentUser.username}
+                readOnly
+                className="w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground outline-none"
+              />
             </div>
           </div>
 

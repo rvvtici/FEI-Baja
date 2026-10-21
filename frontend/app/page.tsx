@@ -12,6 +12,7 @@ import { Item } from "@/components/types/types"
 
 import { AuthGuard } from "@/components/auth-guard"
 import { useMainBackCamera } from "@/lib/camera"
+import { apiFetch } from "@/lib/api"
 
 const Scanner = dynamic(
   () => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
@@ -35,8 +36,7 @@ export default function Home() {
       setError(null);
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const resp = await fetch(`${apiUrl}/api/itens/?code=${rawCode}`);
+        const resp = await apiFetch(`/api/itens/?code=${rawCode}`);
         
         if (resp.ok) {
           const dados = await resp.json();

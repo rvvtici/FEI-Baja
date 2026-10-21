@@ -1,12 +1,11 @@
 "use client"
 
 import { Bell, User, AlertTriangle, X } from "lucide-react"
-import { navItems, type TabId } from "@/lib/navigation"
+import { canAccess, navItems, type TabId } from "@/lib/navigation"
 import { items, isBaixoEstoque } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
-import { useEffect, useState } from "react"
-import axios from "axios"
+import { useCurrentUser } from "@/components/auth-guard"
 
 import Image from 'next/image';
 
@@ -22,20 +21,9 @@ type AppSidebarProps = {
   onClose: () => void
 }
 
-type UserInfo = { id: number; email: string; username: string }
-
 export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps) {
   const baixoEstoque = items.filter(isBaixoEstoque)
-  const [user, setUser] = useState<UserInfo | null>(null)
-
-  useEffect(() => {
-    axios
-      .get(`${process.env.NEXT_PUBLIC_API_URL}/api/users/user-info/`, {
-        withCredentials: true,
-      })
-      .then((res) => setUser(res.data))
-      .catch(() => setUser(null))
-  }, [])
+  const user = useCurrentUser()
 
 
   return (
@@ -82,7 +70,7 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
 
         {/* Nav */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
-          {navItems.map((item) => {
+          {navItems.filter((item) => canAccess(item, user)).map((item) => {
             const Icon = item.icon
             const isActive = active === item.id
             // const categorias = item.categorias
@@ -157,8 +145,8 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
               <User className="h-4.5 w-4.5 text-sidebar-foreground/80" />
             </div>
             <div className="min-w-0 flex-1 leading-tight">
-              <p className="truncate text-sm font-medium">{user?.username ?? "..."}</p>
-              <p className="truncate text-xs text-sidebar-foreground/60">{user?.email ?? ""}</p>
+              <p className="truncate text-sm font-medium">{user.username}</p>
+              <p className="truncate text-xs text-sidebar-foreground/60">{user.email}</p>
             </div>
             <button
               className="relative rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent"

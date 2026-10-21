@@ -1,36 +1,35 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import axios from "axios"
+import { createContext, useContext, useEffect, useState } from "react"
+import { apiFetch, redirectToLogin } from "@/lib/api"
+import { CurrentUser } from "@/components/types/types"
 
-const API = process.env.NEXT_PUBLIC_API_URL
+const CurrentUserContext = createContext<CurrentUser | null>(null)
+
+// Só pode ser usado dentro do <AuthGuard>, onde o usuário já foi carregado
+export function useCurrentUser(): CurrentUser {
+  const user = useContext(CurrentUserContext)
+  if (!user) throw new Error("useCurrentUser precisa estar dentro de <AuthGuard>")
+  return user
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-  const [ok, setOk] = useState(false)
+  const [user, setUser] = useState<CurrentUser | null>(null)
 
   useEffect(() => {
     const check = async () => {
       try {
-        await axios.get(`${API}/api/users/user-info/`, { withCredentials: true })
-        setOk(true)
-      } catch (e: any) {
-        if (e.response?.status === 401) {
-          // access expirou: tenta renovar com o refresh
-          try {
-            await axios.post(`${API}/api/users/token/refresh/`, null, { withCredentials: true })
-            await axios.get(`${API}/api/users/user-info/`, { withCredentials: true })
-            setOk(true)
-            return
-          } catch {}
-        }
-        router.replace("/login")
+        // apiFetch já tenta o refresh e redireciona no 401
+        const resp = await apiFetch("/api/users/user-info/")
+        if (resp.ok) setUser(await resp.json())
+        else redirectToLogin()
+      } catch {
+        redirectToLogin()
       }
     }
     check()
-  }, [router])
+  }, [])
 
-  if (!ok) return null // ou um spinner
-  return <>{children}</>
+  if (!user) return null // ou um spinner
+  return <CurrentUserContext.Provider value={user}>{children}</CurrentUserContext.Provider>
 }

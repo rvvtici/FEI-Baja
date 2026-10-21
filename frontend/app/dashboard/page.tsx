@@ -10,14 +10,24 @@ import { FerramentasView } from "@/components/dashboards/ferramentas/ferramentas
 import { LogsView } from "@/components/dashboards/logs/logs-view"
 import { PlaceholderView } from "@/components/dashboards/placeholder-view"
 import { Button } from "@/components/ui/button"
-import { navItems, type TabId } from "@/lib/navigation"
+import { canAccess, navItems, type TabId } from "@/lib/navigation"
 import { logoutUser } from "@/utils/auth"
 import { useRouter } from "next/navigation"
-import { AuthGuard } from "@/components/auth-guard"
+import { AuthGuard, useCurrentUser } from "@/components/auth-guard"
+import { NoPermission } from "@/components/no-permission"
 
 type SelectId = TabId
 
 export default function Page() {
+  return (
+    <AuthGuard>
+      <DashboardPage />
+    </AuthGuard>
+  )
+}
+
+function DashboardPage() {
+  const user = useCurrentUser()
   const [active, setActive] = useState<SelectId>("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -44,7 +54,6 @@ export default function Page() {
   // .find((item) => item.id === active)
 
   return (
-    <AuthGuard>
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         active={active}
@@ -87,7 +96,9 @@ export default function Page() {
 
         {/* Content */}
         <main className="flex-1 p-4 md:p-8">
-          {active === "dashboard" ? (
+          {!canAccess(current, user) ? (
+            <NoPermission title={current.label} />
+          ) : active === "dashboard" ? (
             <DashboardView />
           ) : active === "competicao" ? (
             <CompeticaoView />
@@ -105,6 +116,5 @@ export default function Page() {
         
       </div>
     </div>
-    </AuthGuard>
   )
 }
