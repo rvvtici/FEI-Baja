@@ -3,11 +3,11 @@ import axios from "axios";
 
 const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/users/`;
 
-export const registerUser = async (email, username, password) => {
+export const registerUser = async (email, username, firstName, lastName, password) => {
   try {
     const response = await axios.post(
       `${API_URL}register/`,
-      { email, username, password },
+      { email, username, first_name: firstName, last_name: lastName, password },
       { withCredentials: true }
     );
 

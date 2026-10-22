@@ -110,7 +110,7 @@ export default function Login() {
       <form onSubmit={handleSubmit} className="flex flex-col items-end gap-2">
         <div className="flex-1 w-full">
           <label className="mb-1 block text-xs text-muted-foreground">
-            Usuário
+            Usuário/Email
           </label>
           <Input
             value={identifier}

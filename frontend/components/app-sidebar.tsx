@@ -145,7 +145,8 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
               <User className="h-4.5 w-4.5 text-sidebar-foreground/80" />
             </div>
             <div className="min-w-0 flex-1 leading-tight">
-              <p className="truncate text-sm font-medium">{user.username}</p>
+              <p className="truncate text-sm font-semibold">{user.first_name} {user.last_name}</p>
+              <p className="truncate text-sm font">{user.username}</p>
               <p className="truncate text-xs text-sidebar-foreground/60">{user.email}</p>
             </div>
             <button

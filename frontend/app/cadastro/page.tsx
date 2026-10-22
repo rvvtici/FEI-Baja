@@ -14,10 +14,14 @@ export default function Cadastro() {
   const [user, setUser] = useState("");
   const [senha, setSenha] = useState("");
   const [email, setEmail] = useState("");
+  const [nome, setNome] = useState("");
+  const [sobrenome, setSobrenome] = useState("");
 
   const [erroEmail, setErroEmail] = useState("");
   const [erroUser, setErroUser] = useState("");
   const [erroSenha, setErroSenha] = useState("");
+  const [erroNome, setErroNome] = useState("");
+  const [erroSobrenome, setErroSobrenome] = useState("");
   const [erroGeral, setErroGeral] = useState("");
   const [carregando, setCarregando] = useState(false);
 
@@ -45,6 +49,14 @@ export default function Cadastro() {
       setErroUser("O usuário não pode conter @.");
       temErro = true;
     }
+    if (nome.trim() === "") {
+      setErroNome("Informe seu nome.");
+      temErro = true;
+    } if (sobrenome.trim() === "") {
+      setErroSobrenome("Informe seu sobrenome.");
+      temErro = true;
+    }
+
     if (senha === "") {
       setErroSenha("Informe uma senha.");
       temErro = true;
@@ -56,7 +68,7 @@ export default function Cadastro() {
 
     setCarregando(true);
     try {
-      await registerUser(email.trim(), user.trim(), senha);
+      await registerUser(email.trim(), user.trim(), nome.trim(), sobrenome.trim(), senha);
       router.replace("/login");
     } catch (err: any) {
       const data = err.response?.data;
@@ -70,6 +82,8 @@ export default function Cadastro() {
             msg.includes("@") ? "O usuário não pode conter @." : "Este usuário já está em uso."
           );
         }
+        if (data.first_name) setErroNome("Informe um nome válido.");
+        if (data.last_name) setErroSobrenome("Informe um sobrenome válido.");
         if (data.password) setErroSenha(String(data.password[0]));
 
         if (!data.email && !data.username && !data.password) {
@@ -103,7 +117,34 @@ export default function Cadastro() {
         <h2 className="m-0">Estoque: FEI Baja</h2>
       </div>
 
+
+
       <form onSubmit={handleSubmit} noValidate className="flex flex-col items-end gap-2">
+        
+         <div className="grid w-full grid-cols-2 gap-2">
+    <div>
+      <label className="mb-1 block text-xs text-muted-foreground">Nome</label>
+      <Input
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        placeholder="Bernardo"
+        className="h-9"
+      />
+      {erroNome && <p className="mt-1 text-xs text-red-400">{erroNome}</p>}
+    </div>
+
+    <div>
+      <label className="mb-1 block text-xs text-muted-foreground">Sobrenome</label>
+      <Input
+        value={sobrenome}
+        onChange={(e) => setSobrenome(e.target.value)}
+        placeholder="Souza"
+        className="h-9"
+      />
+      {erroSobrenome && <p className="mt-1 text-xs text-red-400">{erroSobrenome}</p>}
+    </div>
+  </div>
+        
         <div className="flex-1 w-full">
           <label className="mb-1 block text-xs text-muted-foreground">Email</label>
           <Input
@@ -147,6 +188,10 @@ export default function Cadastro() {
           {carregando ? "Cadastrando..." : "Cadastrar"}
         </Button>
       </form>
+
+
+
+
 
       <a href="/login" className='text-[11px] m-1 text-muted-foreground text-right underline'>
         <p>Já possui conta? Acesse o login aqui</p>

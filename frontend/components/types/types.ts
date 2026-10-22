@@ -19,6 +19,8 @@ export interface CurrentUser {
     id: number;
     email: string;
     username: string;
+    first_name: string;
+    last_name: string;
     role: 'Admin' | 'Membro';
     is_fixed_admin: boolean;
     can_register_items: boolean;
