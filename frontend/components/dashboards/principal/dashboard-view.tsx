@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
+import Barcode from "react-barcode"
 import { Item, ItemMovement } from "@/components/types/types"
 import {
   Boxes,
@@ -24,7 +25,6 @@ import { InventoryTable } from "./inventory-table"
 import {ItemMovimentForm} from './item-movimentation-card'
 import { QRCode } from "react-qr-code"
 import { apiFetch } from "@/lib/api"
-import { itemQrUrl, siteUrl } from "@/lib/item-code"
 import { useCurrentUser } from "@/components/auth-guard"
 import { NO_PERMISSION_MESSAGE } from "@/components/no-permission"
 
@@ -52,6 +52,7 @@ export function DashboardView() {
   const { can_register_items } = useCurrentUser()
   const [activePanel, setActivePanel] = useState<'register' | 'movement'>(can_register_items ? 'register' : 'movement')
   const [itemToMove, setItemToMove] = useState<Item | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const handleSelectTableItem = (item: Item) => {
     setItemToMove(item)
@@ -72,6 +73,8 @@ export function DashboardView() {
         }
       }catch (error){
         console.error('Erro ao buscar dados:', error);
+      } finally {
+        setIsLoading(false)
       }
     }
     useEffect(() => {
@@ -83,6 +86,15 @@ export function DashboardView() {
   
   const emUso = 0 //Placeholder por enquanto (falta endpoint da API)
   const disponiveis = totalQuantity - emUso
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">Carregando...</p>
+      </div>
+    )
+  }
+
 
   return (
     <div className="space-y-6">
@@ -289,10 +301,9 @@ const SaveItem = async (data: NewItemFormData) => {
       <div className="flex flex-col items-center p-6 text-center">
         <h2 className="text-green-500 font-bold text-xl">Peça Cadastrada com Sucesso!</h2>
         <p>O código único gerado pelo sistema foi:</p>
-
-        <div className="mt-4 p-4 bg-white rounded shadow flex flex-col items-center">
-            <QRCode value={itemQrUrl(CreatedItem.code, siteUrl())} size={140} />
-            <span className="mt-2 font-mono font-bold text-black tracking-widest">{CreatedItem.code}</span>
+        
+        <div className="mt-4 p-4 bg-white rounded shadow">
+            <Barcode value={CreatedItem.barcode} width={2} height={60} />
         </div>
 
         <button 
