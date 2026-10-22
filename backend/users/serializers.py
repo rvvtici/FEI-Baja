@@ -16,7 +16,7 @@ class CustomUserSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
         fields = (
-            "id", "email", "username", "role", "is_fixed_admin",
+            "id", "email", "username", "first_name", "last_name", "role", "is_fixed_admin",
             "can_register_items", "can_view_logs", "can_manage_users",
         )
 
@@ -47,9 +47,12 @@ class UserRoleSerializer(serializers.Serializer):
 class RegisterUserSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ("email", "username", "password")
-        extra_kwargs = {"password": {"write_only": True}}
-
+        fields = ("email", "username", "first_name", "last_name", "password")
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "first_name": {"required": True, "allow_blank": False},
+            "last_name": {"required": True, "allow_blank": False},
+        }
     def validate_username(self, value):
         if "@" in value:
             raise serializers.ValidationError("O username não pode conter @")

@@ -89,7 +89,7 @@ function DashboardPage() {
             </a>
             <div>
               <Button onClick={handleLogout}>
-                logout
+                Sair
               </Button>
             </div>
         </header>

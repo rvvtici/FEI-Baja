@@ -117,7 +117,7 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
         </nav>
 
         {/* Alertas de baixo estoque */}
-        <div className="px-3 py-3">
+        {/* <div className="px-3 py-3">
           <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/50 p-3">
             <div className="mb-2 flex items-center gap-2 text-warning">
               <AlertTriangle className="h-4 w-4" />
@@ -136,7 +136,7 @@ export function AppSidebar({ active, onSelect, open, onClose }: AppSidebarProps)
               ))}
             </ul>
           </div>
-        </div>
+        </div> */}
 
         {/* Conta */}
         <div className="border-t border-sidebar-border px-3 py-3">
