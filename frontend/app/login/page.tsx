@@ -38,6 +38,8 @@ export default function Login() {
           // access expirou: tenta renovar com o refresh
           try {
             await axios.post(`${API}/api/users/token/refresh/`, null, { withCredentials: true });
+            // confirma que o novo access funciona, senão o AuthGuard manda de volta pro login (loop)
+            await axios.get(`${API}/api/users/user-info/`, { withCredentials: true });
             router.replace(destino());
             return;
           } catch {}
