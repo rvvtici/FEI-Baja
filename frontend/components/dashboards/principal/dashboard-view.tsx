@@ -245,6 +245,19 @@ export function DashboardView() {
   )
 }
 
+
+// Troca mensagens padrão do servidor por textos mais claros
+function traduzirErroServidor(campo: string, mensagem: string): string {
+  const jaExiste = mensagem.includes('já existe') || mensagem.includes('already exists')
+  if (jaExiste && campo === 'code') {
+    return 'Já existe um item com esse código. Use outro ou deixe o campo vazio para gerar automaticamente.'
+  }
+  if (jaExiste) {
+    return 'Já existe um item com esse valor.'
+  }
+  return mensagem
+}
+
 // Função para registro de itens
 export function RegisterItemForm({onSuccessSave}: {onSuccessSave: () => void}){
 const { register, handleSubmit, reset,  watch, setError, formState: { errors, isSubmitting } } = useForm<NewItemFormData>()
@@ -278,21 +291,41 @@ const SaveItem = async (data: NewItemFormData) => {
   try {
     const resp = await apiFetch('/api/itens/', {
       method: 'POST',
-      body: JSON.stringify(data), // Transforma tudo digitado em JSON
+      body: JSON.stringify(data),
     })
+
+    if (resp.ok) {
+      const newItem = await resp.json()
+      setCreatedItem(newItem)
+      onSuccessSave()
+      reset()
+      fetchCategories()
+      return
+    }
 
     if (resp.status === 403) {
       setSaveError(NO_PERMISSION_MESSAGE)
-    } else if (resp.ok) {
-      const newItem = await resp.json()
-      setCreatedItem(newItem)
-      onSuccessSave() //Atualiza imediatamente o dashboard
-      reset()
-      fetchCategories()
-
+    } else if (resp.status === 400) {
+      const body = await resp.json().catch(() => ({}))
+      let marcouCampo = false
+      for (const [campo, msgs] of Object.entries(body)) {
+        if (campo in data) {
+          setError(campo as keyof NewItemFormData, {
+            type: 'server',
+            message: traduzirErroServidor(campo, Array.isArray(msgs) ? String(msgs[0]) : String(msgs)),
+          })
+          marcouCampo = true
+        }
+      }
+      if (!marcouCampo) {
+        setSaveError('Não foi possível salvar. Confira os dados e tente novamente.')
+      }
+    } else {
+      setSaveError('Erro no servidor ao salvar o item. Tente novamente em instantes.')
     }
   } catch (error) {
     console.error('Erro ao criar item:', error)
+    setSaveError('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.')
   }
 }
 
