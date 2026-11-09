@@ -12,13 +12,17 @@ class CustomUserSerializer(ModelSerializer):
     can_register_items = serializers.SerializerMethodField()
     can_view_logs = serializers.SerializerMethodField()
     can_manage_users = serializers.SerializerMethodField()
+    can_manage_labels = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = (
             "id", "email", "username", "first_name", "last_name", "role", "is_fixed_admin",
-            "can_register_items", "can_view_logs", "can_manage_users",
+            "can_register_items", "can_view_logs", "can_manage_users", "can_manage_labels",
         )
+
+    def get_can_manage_labels(self, obj):
+        return obj.has_perm("stock.manage_labels")
 
     def get_can_register_items(self, obj):
         return obj.has_perm("stock.add_item")
