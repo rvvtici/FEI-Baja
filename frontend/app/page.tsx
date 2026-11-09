@@ -126,7 +126,7 @@ export default function Home() {
               <Scanner
                 ref={scannerRef}
                 onScan={handleScan}
-                formats={['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8']}
+                formats={['qr_code']}
                 components={{ torch: true, zoom: true }}
                 onError={(err) => setError(err.message)}
                 constraints={

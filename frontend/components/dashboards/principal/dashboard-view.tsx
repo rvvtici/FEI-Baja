@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
-import Barcode from "react-barcode"
 import { Item, ItemMovement } from "@/components/types/types"
 import {
   Boxes,
@@ -29,7 +28,7 @@ import { useCurrentUser } from "@/components/auth-guard"
 import { NO_PERMISSION_MESSAGE } from "@/components/no-permission"
 
 type ItemDashboard = Pick<Item, "id" | "name"  | "code" | "status" | "qty" | "minimum_qty" | "category_name">
-type NewItemFormData = Omit<Item, "id" | "status" | "barcode" | "category_name">
+type NewItemFormData = Omit<Item, "id" | "status" | "category_name">
 
 const movTipoConfig: Record<string, { label: string; icon: any; className: string }> = {
   out: { label: "Retirada", icon: ArrowUpRight, className: "bg-red-500/10 text-red-500" },
@@ -300,10 +299,10 @@ const SaveItem = async (data: NewItemFormData) => {
     return (
       <div className="flex flex-col items-center p-6 text-center">
         <h2 className="text-green-500 font-bold text-xl">Peça Cadastrada com Sucesso!</h2>
-        <p>O código único gerado pelo sistema foi:</p>
-        
-        <div className="mt-4 p-4 bg-white rounded shadow">
-            <Barcode value={CreatedItem.barcode} width={2} height={60} />
+        <p>O código do item é:</p>
+
+        <div className="mt-4 rounded bg-white px-6 py-4 shadow">
+          <span className="font-mono text-2xl font-bold tracking-widest text-black">{CreatedItem.code}</span>
         </div>
 
         <button 

@@ -7,7 +7,6 @@ export interface Item {
     category_name: string;
     qty: number;
     minimum_qty: number;
-    barcode: string;
     status: string;
     item_type: 'TOOL' | 'CONSUMABLE' | 'MATERIAL';
     brand?: string;
