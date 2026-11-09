@@ -159,6 +159,10 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Endereço público do frontend, gravado no QR das etiquetas (<FRONTEND_URL>/i/<código>).
+# Sem valor padrão de propósito: etiqueta impressa apontando para o lugar errado não tem conserto.
+FRONTEND_URL = os.getenv('FRONTEND_URL', '').strip()
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

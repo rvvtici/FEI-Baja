@@ -17,6 +17,7 @@ ADMIN_PERMISSIONS = [
     "stock.change_category",
     "stock.delete_category",
     "stock.view_logs",
+    "stock.manage_labels",
     "users.manage_users",
 ]
 

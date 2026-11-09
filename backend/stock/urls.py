@@ -14,9 +14,11 @@ router = DefaultRouter()
 router.register(r'itens', ItemViewSet, basename='item')
 router.register(r'movimentacoes', ItemMovementViewSet, basename='itemmovement')
 router.register(r'categorias', views.CategoryViewSet, basename='category')
+router.register(r'etiquetas/modelos', views.LabelSheetTemplateViewSet, basename='labelsheettemplate')
 
 urlpatterns = [
     # path('ferramentas', views.view_ferramentas, name="view_ferramentas"),
+    path('api/etiquetas/pdf/', views.LabelPdfView.as_view(), name='label-pdf'),
     path('api/', include(router.urls)),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
