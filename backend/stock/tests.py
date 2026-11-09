@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 from users.models import CustomUser
 from users.permissions import CanViewLogs
 from users.roles import ADMIN, MEMBER, set_role
-from .label_layout import label_slots, pdf_bottom_mm
+from .label_layout import label_slots, pdf_bottom_mm, ruler_length_mm
 from .label_pdf import fit_label_text, item_label_url, label_boxes, qr_matrix
 from .models import Category, Item, ItemMovement, LabelSheetTemplate
 
@@ -560,6 +560,79 @@ class LabelLayoutTests(SimpleTestCase):
             self.assertTrue(all(matrix[row][column + i] for i in range(7)))
             self.assertTrue(all(matrix[row + 6][column + i] for i in range(7)))
         self.assertFalse(all(matrix[size - 1][size - 7 + i] for i in range(7)))
+
+
+class LabelCalibrationTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.fixed_admin = CustomUser.objects.create_superuser("root@baja.com", "senha123", username="root")
+        self.admin = CustomUser.objects.create_user("admin@baja.com", "senha123", username="admin")
+        self.member = CustomUser.objects.create_user("membro@baja.com", "senha123", username="membro")
+        set_role(self.admin, ADMIN, acting_user=self.fixed_admin)
+        self.template = LabelSheetTemplate.objects.get(name__startswith="Pimaco A4256")
+        self.url = f"/api/etiquetas/modelos/{self.template.pk}/calibracao/"
+
+    def page_sizes_mm(self, resp):
+        boxes = re.findall(rb"/MediaBox \[ 0 0 ([\d.]+) ([\d.]+) \]", resp.content)
+        return [(round(float(w) * 25.4 / 72, 2), round(float(h) * 25.4 / 72, 2)) for w, h in boxes]
+
+    def test_member_gets_403(self):
+        self.client.force_authenticate(self.member)
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 403)
+        self.assertNotIn(b"%PDF", resp.content)
+
+    def test_anonymous_gets_401(self):
+        self.assertEqual(self.client.get(self.url).status_code, 401)
+
+    def test_admin_gets_one_page_with_exact_size(self):
+        for user in (self.admin, self.fixed_admin):
+            self.client.force_authenticate(user)
+            resp = self.client.get(self.url)
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp["Content-Type"], "application/pdf")
+            self.assertTrue(resp.content.startswith(b"%PDF"))
+            self.assertEqual(self.page_sizes_mm(resp), [(210.0, 297.0)])
+            self.assertIn(b"/PrintScaling /None", resp.content)
+
+    def test_uses_saved_offsets_and_works_for_inactive_template(self):
+        self.client.force_authenticate(self.admin)
+        LabelSheetTemplate.objects.filter(pk=self.template.pk).update(
+            offset_x_mm="1.50", offset_y_mm="-0.75", active=False,
+        )
+        with patch("stock.views.build_calibration_pdf", return_value=b"%PDF-teste") as build:
+            resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 200)
+        sheet, title = build.call_args.args
+        self.assertEqual((sheet["offset_x_mm"], sheet["offset_y_mm"]), (Decimal("1.50"), Decimal("-0.75")))
+        self.assertEqual(title, self.template.name)
+
+    def test_small_page_still_works(self):
+        self.client.force_authenticate(self.admin)
+        small = LabelSheetTemplate.objects.create(
+            name="Rolo 60 x 40", page_width_mm="60.00", page_height_mm="40.00", columns=1, rows=1,
+            label_width_mm="56.00", label_height_mm="36.00", margin_top_mm="2.00", margin_left_mm="2.00",
+            pitch_x_mm="56.00", pitch_y_mm="36.00",
+        )
+        resp = self.client.get(f"/api/etiquetas/modelos/{small.pk}/calibracao/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(self.page_sizes_mm(resp), [(60.0, 40.0)])
+
+    def test_unknown_template(self):
+        self.client.force_authenticate(self.admin)
+        self.assertEqual(self.client.get("/api/etiquetas/modelos/99999/calibracao/").status_code, 404)
+
+    def test_only_get_is_allowed(self):
+        self.client.force_authenticate(self.admin)
+        self.assertEqual(self.client.post(self.url).status_code, 405)
+
+    def test_ruler_length(self):
+        self.assertEqual(ruler_length_mm(Decimal("210.00")), 100)
+        self.assertEqual(ruler_length_mm(Decimal("297.00")), 100)
+        self.assertEqual(ruler_length_mm(Decimal("120.00")), 100)
+        self.assertEqual(ruler_length_mm(Decimal("100.00")), 80)   # sobra 10 mm de cada lado
+        self.assertEqual(ruler_length_mm(Decimal("60.00")), 40)
+        self.assertEqual(ruler_length_mm(Decimal("25.00")), 0)
 
 
 @override_settings(FRONTEND_URL="https://estoque.exemplo.com/")

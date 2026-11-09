@@ -11,7 +11,7 @@ from reportlab.lib.utils import simpleSplit
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen import canvas
 
-from .label_layout import label_slots, pdf_bottom_mm
+from .label_layout import label_slots, pdf_bottom_mm, ruler_length_mm
 
 QR_ERROR_LEVEL = "M"
 QR_QUIET_ZONE_MODULES = 4  # margem branca exigida pelo padrão do QR
@@ -200,6 +200,100 @@ def build_labels_pdf(sheet, labels, start_position=1, title="Etiquetas"):
         x = float(slot.x_mm) * mm
         y = float(pdf_bottom_mm(sheet, slot.top_mm)) * mm
         draw_label(pdf, x, y, boxes, *prepared[label])
+
+    pdf.showPage()
+    pdf.save()
+    return buffer.getvalue()
+
+
+def _draw_ruler(pdf, x, y, length_mm, horizontal):
+    """Régua com origem em (x, y): para a direita (horizontal) ou para baixo (vertical). Traços a cada 1 mm."""
+    pdf.setLineWidth(0.3)
+    if horizontal:
+        pdf.line(x, y, x + length_mm * mm, y)
+    else:
+        pdf.line(x, y, x, y - length_mm * mm)
+
+    pdf.setFont(FONT, 6)
+    for tick in range(length_mm + 1):
+        size = (4 if tick % 10 == 0 else 2.5 if tick % 5 == 0 else 1.5) * mm
+        if horizontal:
+            pdf.line(x + tick * mm, y, x + tick * mm, y - size)
+            if tick % 10 == 0 and tick:
+                pdf.drawCentredString(x + tick * mm, y - size - 6, str(tick))
+        else:
+            pdf.line(x, y - tick * mm, x + size, y - tick * mm)
+            if tick % 10 == 0 and tick:
+                pdf.drawString(x + size + 1.5, y - tick * mm - 2, str(tick))
+
+
+def build_calibration_pdf(sheet, title):
+    """Folha de teste de um modelo: contorno, cruz no centro e número de cada etiqueta, mais réguas de 100 mm."""
+    buffer = BytesIO()
+    pdf = new_canvas(buffer, sheet, f"Calibração - {title}")
+
+    page_w = float(sheet["page_width_mm"]) * mm
+    page_h = float(sheet["page_height_mm"]) * mm
+    width = float(sheet["label_width_mm"]) * mm
+    height = float(sheet["label_height_mm"]) * mm
+
+    # Etiquetas: já com os ajustes (offsets) do modelo, como sairão na impressão de verdade
+    pdf.setLineWidth(0.25)
+    pdf.setStrokeGray(0.35)
+    pdf.setFillGray(0.35)
+    number_size = max(MIN_FONT_SIZE, min(8, height * 0.25))
+    cross = min(3 * mm, width / 4, height / 4)
+    for slot in label_slots(sheet, sheet["columns"] * sheet["rows"]):
+        x = float(slot.x_mm) * mm
+        y = float(pdf_bottom_mm(sheet, slot.top_mm)) * mm
+        pdf.rect(x, y, width, height, stroke=1, fill=0)
+        center_x, center_y = x + width / 2, y + height / 2
+        pdf.line(center_x - cross, center_y, center_x + cross, center_y)
+        pdf.line(center_x, center_y - cross, center_x, center_y + cross)
+        pdf.setFont(FONT, number_size)
+        pdf.drawString(x + 1 * mm, y + height - 1 * mm - number_size * 0.8, str(slot.position))
+
+    # Réguas: posição fixa na folha (não seguem os offsets), para conferir se a impressão saiu em 100%
+    ruler_w = ruler_length_mm(sheet["page_width_mm"])
+    ruler_h = ruler_length_mm(sheet["page_height_mm"])
+    origin_x = (page_w - ruler_w * mm) / 2
+    origin_y = (page_h + ruler_h * mm) / 2
+    band = 8 * mm
+
+    pdf.setFillGray(1)
+    if ruler_w:
+        pdf.rect(origin_x - 1 * mm, origin_y - band, ruler_w * mm + 4 * mm, band + 1 * mm, stroke=0, fill=1)
+    if ruler_h:
+        pdf.rect(origin_x - 1 * mm, origin_y - ruler_h * mm - 2 * mm, band + 2 * mm, ruler_h * mm + 3 * mm, stroke=0, fill=1)
+
+    # Instruções no canto interno das réguas (só quando a folha tem espaço para elas)
+    note_x, note_top = origin_x + band + 4 * mm, origin_y - band - 3 * mm
+    note_w = ruler_w * mm - band - 6 * mm
+    if ruler_w >= 80 and ruler_h >= 50:
+        notes = [
+            "Imprima em Tamanho real / Escala 100%, sem ajustar à página.",
+            f"Cada régua deve medir exatamente {ruler_w} mm.",
+            "Os contornos devem coincidir com as etiquetas da folha.",
+            "Ajuste horizontal positivo = direita; vertical positivo = baixo.",
+            f"Ajustes neste teste: horizontal {sheet['offset_x_mm']} mm, vertical {sheet['offset_y_mm']} mm.",
+        ]
+        lines = [(_truncate(_printable(title), FONT_BOLD, 7, note_w), FONT_BOLD)]
+        lines += [(_truncate(note, FONT, 7, note_w), FONT) for note in notes]
+        pdf.rect(note_x - 2 * mm, note_top - len(lines) * 10 - 2 * mm, note_w + 4 * mm, len(lines) * 10 + 3 * mm, stroke=0, fill=1)
+        pdf.setFillGray(0)
+        for index, (line, font) in enumerate(lines):
+            pdf.setFont(font, 7)
+            pdf.drawString(note_x, note_top - (index + 1) * 10 + 3, line)
+
+    pdf.setStrokeGray(0)
+    pdf.setFillGray(0)
+    if ruler_w:
+        _draw_ruler(pdf, origin_x, origin_y, ruler_w, horizontal=True)
+    if ruler_h:
+        _draw_ruler(pdf, origin_x, origin_y, ruler_h, horizontal=False)
+    if ruler_w or ruler_h:
+        pdf.setFont(FONT, 6)
+        pdf.drawRightString(origin_x - 1.5, origin_y + 1.5, "0")
 
     pdf.showPage()
     pdf.save()

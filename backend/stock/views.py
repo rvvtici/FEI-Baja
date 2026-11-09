@@ -1,13 +1,14 @@
 from django.conf import settings
 from django.http import HttpResponse
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from users.permissions import CanManageLabels
 from .label_layout import sheet_values
-from .label_pdf import build_labels_pdf, item_label_url
+from .label_pdf import build_calibration_pdf, build_labels_pdf, item_label_url
 from .models import Item, ItemMovement, Category, LabelSheetTemplate
 from .serializers import (
     ItemSerializer, ItemMovementSerializer, CategorySerializer, LabelSheetTemplateSerializer,
@@ -20,6 +21,13 @@ class LabelSheetTemplateViewSet(viewsets.ModelViewSet):
     queryset = LabelSheetTemplate.objects.all()
     serializer_class = LabelSheetTemplateSerializer
     permission_classes = [IsAuthenticated, CanManageLabels]
+
+    @action(detail=True, methods=["get"], url_path="calibracao")
+    def calibration(self, request, pk=None):
+        # Folha de teste: funciona também para modelo inativo, que se calibra antes de ativar
+        template = self.get_object()
+        pdf = build_calibration_pdf(sheet_values(template), template.name)
+        return pdf_response(pdf, "calibracao.pdf")
 
 
 def pdf_response(content, filename):

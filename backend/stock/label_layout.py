@@ -55,6 +55,12 @@ def pdf_bottom_mm(sheet, top_mm):
     return sheet["page_height_mm"] - top_mm - sheet["label_height_mm"]
 
 
+def ruler_length_mm(page_size_mm, wanted=100, edge=10):
+    """Comprimento da régua de conferência: 100 mm, ou o maior múltiplo de 10 que couber numa folha pequena."""
+    available = int((page_size_mm - 2 * edge) // 10) * 10
+    return max(0, min(wanted, available))
+
+
 def sheet_geometry_errors(v):
     """Devolve {campo: mensagem} com o que impede a grade de caber na página."""
     errors = {}
