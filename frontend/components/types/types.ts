@@ -25,6 +25,7 @@ export interface CurrentUser {
     can_register_items: boolean;
     can_view_logs: boolean;
     can_manage_users: boolean;
+    can_manage_labels: boolean;
 }
 
 export interface ItemMovement {

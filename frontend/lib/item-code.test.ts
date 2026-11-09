@@ -1,11 +1,25 @@
 import { describe, expect, it } from "vitest"
 import { Item } from "@/components/types/types"
-import { findItemByCode, itemLookupPath, itemQrUrl, parseScannedCode } from "./item-code"
+import { findItemByCode, itemLookupPath, itemQrUrl, itemShortLinkTarget, parseScannedCode } from "./item-code"
 
 describe("parseScannedCode", () => {
   it("extrai o código do link do QR", () => {
     expect(parseScannedCode("http://localhost:3000/?code=MO001")).toBe("MO001")
     expect(parseScannedCode("https://feibaja.vercel.app/?code=MO%20001")).toBe("MO 001")
+  })
+
+  it("extrai o código do link curto da etiqueta (/i/<código>)", () => {
+    expect(parseScannedCode("https://feibaja.vercel.app/i/MO001")).toBe("MO001")
+    expect(parseScannedCode("http://localhost:3000/i/FER-0123_A/")).toBe("FER-0123_A")
+    expect(parseScannedCode("https://feibaja.vercel.app/i/a%20b%2Fc\r\n")).toBe("a b/c")
+    // o link curto tem prioridade, mas o formato antigo continua valendo em qualquer outro caminho
+    expect(parseScannedCode("https://feibaja.vercel.app/i/MO001?code=OUTRO")).toBe("MO001")
+    expect(parseScannedCode("https://feibaja.vercel.app/i/")).toBe("")
+  })
+
+  it("o link curto redireciona para a tela que abre a peça pelo código", () => {
+    expect(itemShortLinkTarget("MO001")).toBe("/?code=MO001")
+    expect(parseScannedCode(`http://localhost:3000${itemShortLinkTarget("A+B&C")}`)).toBe("A+B&C")
   })
 
   it("remove espaços, quebras de linha e caracteres de controle", () => {

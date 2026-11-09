@@ -6,6 +6,7 @@ import {
   Boxes,
   Package,
   ScrollText,
+  Printer,
   type LucideIcon,
 } from "lucide-react"
 import type { CurrentUser } from "@/components/types/types"
@@ -17,6 +18,7 @@ export type TabId =
   | "competicao"
   | "estoque-visual"
   | "estoque-geral"
+  | "etiquetas"
   | "logs"
 
 // export type CategoriasId = 
@@ -39,7 +41,7 @@ export type NavItem = {
   icon: LucideIcon
   descricao: string
   // flag de /api/users/user-info/ exigida para ver a aba
-  requires?: "can_view_logs" | "can_register_items" | "can_manage_users"
+  requires?: "can_view_logs" | "can_register_items" | "can_manage_users" | "can_manage_labels"
   // categorias?: CategoriasEstoque[]
 }
 
@@ -55,6 +57,7 @@ export const navItems: NavItem[] = [
   { id: "orcamentos", label: "Orçamentos", icon: Wallet, descricao: "Gastos e verba anual" },
   { id: "competicao", label: "Competição", icon: Trophy, descricao: "Checklist para abril" },
   // { id: "estoque-visual", label: "Estoque Visual", icon: Boxes, descricao: "Parafusos, abraçadeiras (estimado)" },
+  { id: "etiquetas", label: "Etiquetas", icon: Printer, descricao: "Impressão de etiquetas com QR code", requires: "can_manage_labels" },
   { id: "logs", label: "Logs", icon: ScrollText, descricao: "Movimentações e auditoria", requires: "can_view_logs" },
 ]
 

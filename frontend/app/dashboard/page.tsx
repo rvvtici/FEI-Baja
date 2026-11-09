@@ -8,6 +8,7 @@ import { CompeticaoView } from "@/components/dashboards/competicao/competicao-vi
 import { OrcamentosView } from "@/components/dashboards/orcamentos/orcamentos-view"
 import { FerramentasView } from "@/components/dashboards/ferramentas/ferramentas-view"
 import { LogsView } from "@/components/dashboards/logs/logs-view"
+import { LabelsView } from "@/components/dashboards/etiquetas/labels-view"
 import { PlaceholderView } from "@/components/dashboards/placeholder-view"
 import { Button } from "@/components/ui/button"
 import { canAccess, navItems, type TabId } from "@/lib/navigation"
@@ -104,6 +105,8 @@ function DashboardPage() {
             <CompeticaoView />
           ) : active === "orcamentos" ? (
             <OrcamentosView />
+          ) : active === "etiquetas" ? (
+            <LabelsView />
           ) : active === "logs" ? (
             <LogsView />
           ): active === "ferramentas" ? (

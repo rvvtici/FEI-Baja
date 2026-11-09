@@ -15,12 +15,31 @@ export function itemQrUrl(code: string, siteUrl: string): string {
   return url.toString()
 }
 
-// Devolve o código lido no QR
+// Link curto e estável impresso nas etiquetas: <site>/i/<código>
+export const ITEM_SHORT_PATH = "/i/"
+
+// Para onde o link curto leva hoje (no futuro, a tela de detalhe do item)
+export function itemShortLinkTarget(code: string): string {
+  return `/?${ITEM_CODE_PARAM}=${encodeURIComponent(code)}`
+}
+
+function decodePathSegment(segment: string): string {
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return segment
+  }
+}
+
+// Devolve o código lido no QR. Aceita o link da etiqueta (/i/<código>), o link antigo (/?code=) e o código puro
 export function parseScannedCode(raw: string): string {
   const value = raw.replace(/[\u0000-\u001F\u007F]/g, "").trim()
   if (/^https?:\/\//i.test(value)) {
     try {
-      return (new URL(value).searchParams.get(ITEM_CODE_PARAM) ?? "").trim()
+      const url = new URL(value)
+      const short = url.pathname.match(/^\/i\/([^/]+)\/?$/)
+      if (short) return decodePathSegment(short[1]).trim()
+      return (url.searchParams.get(ITEM_CODE_PARAM) ?? "").trim()
     } catch {
       return ""
     }
